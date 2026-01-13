@@ -8,7 +8,9 @@
 #include <pxe/components/component.hpp>
 #include <pxe/result.hpp>
 #include <pxe/scenes/scene.hpp>
+
 #include <raylib.h>
+
 #include <cstddef>
 
 namespace pxe {

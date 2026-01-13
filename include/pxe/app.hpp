@@ -8,16 +8,18 @@
 #include <pxe/render/sprite_sheet.hpp>
 #include <pxe/result.hpp>
 #include <pxe/scenes/scene.hpp>
+
 #include <raylib.h>
-#include <spdlog/spdlog.h>
-#include <cstdarg>
+
 #include <algorithm>
+#include <cstdarg>
 #include <cstdlib>
 #include <format>
 #include <functional>
 #include <memory>
 #include <optional>
 #include <ranges>
+#include <spdlog/spdlog.h>
 #include <string>
 #include <type_traits>
 #include <typeinfo>

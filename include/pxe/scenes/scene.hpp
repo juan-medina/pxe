@@ -5,7 +5,7 @@
 
 #include <pxe/components/component.hpp>
 #include <pxe/result.hpp>
-#include <spdlog/spdlog.h>
+
 #include <algorithm>
 #include <cstddef>
 #include <format>
@@ -13,6 +13,7 @@
 #include <memory>
 #include <optional>
 #include <ranges>
+#include <spdlog/spdlog.h>
 #include <typeinfo>
 #include <utility>
 #include <vector>
