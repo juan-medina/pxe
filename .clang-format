@@ -1,0 +1,68 @@
+# SPDX-FileCopyrightText: 2026 Juan Medina
+# SPDX-License-Identifier: MIT
+
+BasedOnStyle: llvm
+---
+Language: Cpp
+Standard: c++20
+SortIncludes: CaseInsensitive
+IncludeBlocks: Regroup
+
+IncludeCategories:
+    # PXE headers: <pxe/...> or "pxe/..."
+    -   Regex: '(^<pxe/.*>|^"pxe/.*")'
+        Priority: 1
+
+    # Project headers: "file.h", "something.hpp"
+    -   Regex: '"[^"]+\.(h|hpp)"'
+        Priority: 2
+
+    # raylib, we need it before windows.h
+    -   Regex: '<raylib\.h>'
+        Priority: 3
+
+    # Windows header, must be before other system headers
+    -   Regex: '<windows\.h>'
+        Priority: 4
+
+    # System + system headers: <spdlog/...>, <vector>, <string>
+    -   Regex: '<.*>'
+        Priority: 5
+
+    # Relative includes: ../something
+    -   Regex: '\.\./.*'
+        Priority: 6
+
+    # Fallback
+    -   Regex: '.*'
+        Priority: 7
+
+AccessModifierOffset: -4
+AlignEscapedNewlines: DontAlign
+AllowShortBlocksOnASingleLine: Empty
+AllowShortEnumsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: WithoutElse
+AllowShortLoopsOnASingleLine: true
+AlwaysBreakTemplateDeclarations: Yes
+BinPackArguments: false
+BinPackParameters: false
+BreakBeforeBinaryOperators: NonAssignment
+BreakBeforeTernaryOperators: true
+ColumnLimit: 120
+DerivePointerAlignment: false
+FixNamespaceComments: true
+IndentPPDirectives: AfterHash
+IndentWidth: 4
+KeepEmptyLinesAtTheStartOfBlocks: false
+PointerAlignment: Right
+SpaceAfterCStyleCast: false
+SpaceAfterTemplateKeyword: false
+SpaceAroundPointerQualifiers: After
+SpaceBeforeCaseColon: false
+SpaceBeforeCtorInitializerColon: false
+SpaceBeforeInheritanceColon: false
+SpaceBeforeParens: Never
+SpaceBeforeRangeBasedForLoopColon: false
+TabWidth: 4
+UseTab: Always

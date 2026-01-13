@@ -1,0 +1,15 @@
+[submodule "external/spdlog"]
+	path = external/spdlog
+	url = https://github.com/gabime/spdlog
+[submodule "external/boxer"]
+	path = external/boxer
+	url = https://github.com/aaronmjacobs/Boxer.git
+[submodule "external/raylib"]
+	path = external/raylib
+	url = https://github.com/raysan5/raylib.git
+[submodule "external/raygui"]
+	path = external/raygui
+	url = https://github.com/raysan5/raygui
+[submodule "external/jsoncons"]
+	path = external/jsoncons
+	url = https://github.com/danielaparker/jsoncons
