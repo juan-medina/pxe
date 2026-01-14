@@ -57,6 +57,10 @@ function(pxe_add_game TARGET_NAME)
                 ${VERSION_JSON}
                 ${APP_RC_OUT}
                 ${APP_ICON_ICO}
+                "${PROJECT_NAME}"
+                "${PROJECT_DESCRIPTION}"
+                "${APP_COMPANY}"
+                "${APP_COPYRIGHT}"
                 DEPENDS ${_RC_DEPENDS}
                 VERBATIM
         )
