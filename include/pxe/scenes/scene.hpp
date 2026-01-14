@@ -34,17 +34,21 @@ public:
 
 	[[nodiscard]] auto end() -> result<> override;
 
-	[[nodiscard]] virtual auto enable() -> result<> {
+	[[nodiscard]] virtual auto show() -> result<> {
 		return true;
 	}
 
-	[[nodiscard]] virtual auto disable() -> result<> {
+	[[nodiscard]] virtual auto hide() -> result<> {
 		return true;
 	}
 
 	[[nodiscard]] auto update(float delta) -> result<> override;
 
 	[[nodiscard]] auto draw() -> result<> override;
+
+	[[nodiscard]] virtual auto reset() -> result<> {
+		return true;
+	}
 
 	[[nodiscard]] virtual auto layout(const size /*screen_size*/) -> result<> {
 		return true;

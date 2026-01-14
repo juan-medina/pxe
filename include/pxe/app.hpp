@@ -176,13 +176,13 @@ protected:
 			scenes_, [](const auto &scene_a, const auto &scene_b) -> bool { return scene_a->layer < scene_b->layer; });
 	}
 
-	[[nodiscard]] auto enable_scene(int id, bool enabled = true) -> result<>;
+	[[nodiscard]] auto show_scene(int id, bool show = true) -> result<>;
 
-	[[nodiscard]] auto disable_scene(const int id, const bool disabled = true) -> result<> {
-		return enable_scene(id, !disabled);
+	[[nodiscard]] auto hide_scene(const int id, const bool hide = true) -> result<> {
+		return show_scene(id, !hide);
 	}
 
-	[[nodiscard]] auto re_enable_scene(int id) -> result<>;
+	[[nodiscard]] auto reset_scene(int id) -> result<>;
 
 	[[nodiscard]] auto
 	set_default_font(const std::string &path, int size = 0, int texture_filter = TEXTURE_FILTER_POINT) -> result<>;

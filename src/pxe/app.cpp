@@ -291,43 +291,36 @@ auto app::draw() const -> result<> {
 	return true;
 }
 
-auto app::enable_scene(const int id, const bool enabled) -> result<> {
+auto app::show_scene(const int id, const bool show) -> result<> {
 	std::shared_ptr<scene_info> info;
 	if(const auto err = find_scene_info(id).unwrap(info); err) {
 		return error(std::format("scene with id {} not found", id));
 	}
-	info->visible = enabled;
-	if(enabled) {
-		if(const auto enable_err = info->scene_ptr->enable().unwrap(); enable_err) {
-			return error(std::format("failed to enable scene with id: {} name: {}", id, info->name), *enable_err);
+	info->visible = show;
+	if(show) {
+		if(const auto enable_err = info->scene_ptr->show().unwrap(); enable_err) {
+			return error(std::format("failed to show scene with id: {} name: {}", id, info->name), *enable_err);
 		}
-		SPDLOG_DEBUG("enabled scene with id: {} name: {}", id, info->name);
-		// layout on enable
-		if(const auto err_layout = info->scene_ptr->layout(drawing_resolution_).unwrap(); err_layout) {
-			return error(std::format("failed to layout scene with id: {} name: {}", id, info->name), *err_layout);
-		}
+		SPDLOG_DEBUG("show scene with id: {} name: {}", id, info->name);
 	} else {
-		if(const auto disable_err = info->scene_ptr->disable().unwrap(); disable_err) {
-			return error(std::format("failed to disable scene with id: {} name: {}", id, info->name), *disable_err);
+		if(const auto disable_err = info->scene_ptr->hide().unwrap(); disable_err) {
+			return error(std::format("failed to hide scene with id: {} name: {}", id, info->name), *disable_err);
 		}
-		SPDLOG_DEBUG("disabled scene with id: {} name: {}", id, info->name);
+		SPDLOG_DEBUG("hide scene with id: {} name: {}", id, info->name);
 	}
 	return true;
 }
 
-auto app::re_enable_scene(const int id) -> result<> {
+auto app::reset_scene(const int id) -> result<> {
 	std::shared_ptr<scene_info> info;
 	if(const auto err = find_scene_info(id).unwrap(info); err) {
 		return error(std::format("scene with id {} not found", id));
 	}
-	if(!info->visible) {
-		return error(std::format("scene with id {} is not enabled", id));
+	if(const auto reset_err = info->scene_ptr->reset().unwrap(); reset_err) {
+		return error(std::format("failed to re-enable scene with id: {} name: {}", id, info->name), *reset_err);
 	}
-	if(const auto enable_err = info->scene_ptr->enable().unwrap(); enable_err) {
-		return error(std::format("failed to re-enable scene with id: {} name: {}", id, info->name), *enable_err);
-	}
-	SPDLOG_DEBUG("re-enabled scene with id: {} name: {}", id, info->name);
-	// layout on enable
+	SPDLOG_DEBUG("reset scene with id: {} name: {}", id, info->name);
+	// layout on reset
 	if(const auto layout_err = info->scene_ptr->layout(drawing_resolution_).unwrap(); layout_err) {
 		return error(std::format("failed to layout scene with id: {} name: {}", id, info->name), *layout_err);
 	}
