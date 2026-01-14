@@ -60,6 +60,10 @@ auto version_display::update(const float delta) -> result<> {
 		return error("failed to update base UI component", *err);
 	}
 
+	if(!is_enabled()) {
+		return true;
+	}
+
 	const auto inside = point_inside(GetMousePosition());
 
 	if(hover_ && !inside) {

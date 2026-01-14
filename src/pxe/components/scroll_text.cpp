@@ -30,6 +30,12 @@ auto scroll_text::update(const float delta) -> result<> {
 		return error("failed to update base UI component", *err);
 	}
 
+	if(is_enabled()) {
+		GuiEnable();
+	} else {
+		GuiDisable();
+	}
+
 	return true;
 }
 

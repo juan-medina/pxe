@@ -21,7 +21,7 @@
 
 namespace pxe {
 
-result<> quick_bar::init(app &app) {
+auto quick_bar::init(app &app) -> result<> {
 	return ui_component::init(app);
 }
 
@@ -83,6 +83,10 @@ auto quick_bar::end() -> result<> {
 }
 
 auto quick_bar::update(float delta) -> result<> {
+	if(!is_enabled()) {
+		return true;
+	}
+
 	for(const auto &sprite_ptr: sprites_) {
 		if(const auto err = sprite_ptr->update(delta).unwrap(); err) {
 			return error("failed to update sprite in quick_bar", *err);

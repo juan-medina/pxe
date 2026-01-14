@@ -45,7 +45,7 @@ auto sprite_anim::init(app &app,
 }
 
 auto sprite_anim::update(const float delta) -> result<> {
-	if(!is_visible() || !running_) {
+	if(!is_visible() || !running_ || !is_enabled()) {
 		return sprite::update(delta);
 	}
 	time_accum_ += delta;

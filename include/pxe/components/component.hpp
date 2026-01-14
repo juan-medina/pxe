@@ -81,6 +81,14 @@ public:
 		return id_;
 	}
 
+	[[nodiscard]] auto is_enabled() const -> bool {
+		return enabled_;
+	}
+
+	auto set_enabled(const bool enabled) -> void {
+		enabled_ = enabled;
+	}
+
 protected:
 	[[nodiscard]] auto get_app() -> app & {
 		assert(app_.has_value() && "app is not set");
@@ -97,6 +105,7 @@ private:
 	Vector2 pos_{};
 	size size_{};
 	bool visible_ = true;
+	bool enabled_ = true;
 	size_t id_{0};
 	static size_t next_id;
 };
