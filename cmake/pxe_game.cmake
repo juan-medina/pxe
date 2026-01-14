@@ -14,12 +14,6 @@ function(pxe_add_game TARGET_NAME)
     set(EMSCRIPTEN FALSE)
     if (CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
         set(EMSCRIPTEN TRUE)
-
-        # If PLATFORM was not provided on the command line, default to Web for Emscripten builds
-        if (NOT DEFINED PLATFORM)
-            set(PLATFORM "Web" CACHE STRING "Target platform (default: Web when building with Emscripten)")
-        endif ()
-
     endif ()
 
     find_package(Python3 COMPONENTS Interpreter REQUIRED)
@@ -70,18 +64,18 @@ function(pxe_add_game TARGET_NAME)
 
     # --- Create executable (include generated .rc on Windows) ---
     if (WIN32)
-        add_executable(${APP_NAME}
+        add_executable(${TARGET_NAME}
                 ${APP_HEADER_FILES}
                 ${APP_SOURCE_FILES}
                 ${APP_RC_OUT}
         )
 
-        target_link_options(${APP_NAME} PRIVATE
+        target_link_options(${TARGET_NAME} PRIVATE
                 $<$<CONFIG:Debug>:/SUBSYSTEM:CONSOLE>
                 $<$<NOT:$<CONFIG:Debug>>:/SUBSYSTEM:WINDOWS>
         )
     else ()
-        add_executable(${APP_NAME}
+        add_executable(${TARGET_NAME}
                 ${APP_HEADER_FILES}
                 ${APP_SOURCE_FILES}
         )
@@ -89,14 +83,14 @@ function(pxe_add_game TARGET_NAME)
 
     # Ensure bump happens before building the executable (only if enabled)
     if (ENABLE_VERSION_BUMP)
-        add_dependencies(${APP_NAME} version_bump)
+        add_dependencies(${TARGET_NAME} version_bump)
     endif ()
 
     if (WIN32)
         set_source_files_properties(${APP_RC_OUT} PROPERTIES LANGUAGE RC)
         source_group("Resources" FILES ${APP_RC_OUT})
 
-        target_compile_definitions(${APP_NAME} PRIVATE
+        target_compile_definitions(${TARGET_NAME} PRIVATE
                 WIN32_LEAN_AND_MEAN
                 NOMINMAX
                 NOUSER
@@ -105,19 +99,19 @@ function(pxe_add_game TARGET_NAME)
     endif ()
 
     if (MSVC)
-        target_compile_options(${APP_NAME} PRIVATE /W4 /WX /permissive-)
+        target_compile_options(${TARGET_NAME} PRIVATE /W4 /WX /permissive-)
     else ()
-        target_compile_options(${APP_NAME} PRIVATE -Wall -Wextra -pedantic -Werror)
+        target_compile_options(${TARGET_NAME} PRIVATE -Wall -Wextra -pedantic -Werror)
     endif ()
 
-    target_link_libraries(${APP_NAME} PRIVATE pxe)
+    target_link_libraries(${TARGET_NAME} PRIVATE pxe)
 
     if (EMSCRIPTEN)
-        set(CMAKE_EXECUTABLE_SUFFIX ".html")
+        set(CMAKE_EXECUTABLE_SUFFIX ".html" PARENT_SCOPE)
 
         set(CUSTOM_SHELL ${CMAKE_SOURCE_DIR}/src/web/template.html)
 
-        target_link_options(${APP_NAME} PRIVATE
+        target_link_options(${TARGET_NAME} PRIVATE
                 "--shell-file=${CUSTOM_SHELL}"
                 "--preload-file=${CMAKE_SOURCE_DIR}/resources@resources"
                 "-sUSE_GLFW=3"
@@ -127,17 +121,17 @@ function(pxe_add_game TARGET_NAME)
                 "-sEXPORTED_RUNTIME_METHODS=['HEAPF32','HEAP32','HEAPU8','requestFullscreen']"
         )
 
-        set_target_properties(${APP_NAME} PROPERTIES OUTPUT_NAME "index")
+        set_target_properties(${TARGET_NAME} PROPERTIES OUTPUT_NAME "index")
         configure_file(${CMAKE_SOURCE_DIR}/src/res/icon.ico favicon.ico COPYONLY)
     endif ()
 
     if (NOT EMSCRIPTEN)
         add_custom_command(
-                TARGET ${APP_NAME} POST_BUILD
+                TARGET ${TARGET_NAME} POST_BUILD
                 COMMAND ${CMAKE_COMMAND} -E echo "Syncing resources if needed..."
                 COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
                 ${CMAKE_SOURCE_DIR}/resources
-                $<TARGET_FILE_DIR:${APP_NAME}>/resources
+                $<TARGET_FILE_DIR:${TARGET_NAME}>/resources
                 COMMENT "Copying resources only if changed"
                 VERBATIM
         )

@@ -9,6 +9,13 @@ project(pxe
         LANGUAGES CXX
 )
 
+# Auto-detect platform for Emscripten builds
+if (CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
+    if (NOT DEFINED PLATFORM)
+        set(PLATFORM "Web" CACHE STRING "Target platform")
+    endif ()
+endif ()
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
