@@ -25,6 +25,7 @@ public:
 	auto layout(size screen_size) -> result<> override;
 
 	struct version_click {};
+	struct options_click {};
 
 private:
 	size_t version_display_ = 0;
@@ -38,6 +39,7 @@ private:
 
 	size_t close_button_ = 0;
 	size_t toggle_fullscreen_button_ = 0;
+	size_t options_button_ = 0;
 
 	int button_click_{0};
 

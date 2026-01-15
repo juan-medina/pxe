@@ -37,6 +37,11 @@ auto game_overlay::init(app &app) -> result<> {
 		return error("failed to get quick bar", *err);
 	}
 
+	// Add options button
+	if(const auto err = quick_bar_ptr->add_button("gear.png").unwrap(options_button_); err) {
+		return error("failed to add options button", *err);
+	}
+
 	// Add fullscreen toggle button
 	if(const auto err = quick_bar_ptr->add_button(fullscreen_frame).unwrap(toggle_fullscreen_button_); err) {
 		return error("failed to add fullscreen toggle button", *err);
@@ -110,6 +115,8 @@ auto game_overlay::on_button_click(const button::click &evt) -> result<> {
 		}
 	} else if(evt.id == version_display_) {
 		get_app().post_event(version_click{});
+	} else if(evt.id == options_button_) {
+		get_app().post_event(options_click{});
 	}
 	return true;
 }

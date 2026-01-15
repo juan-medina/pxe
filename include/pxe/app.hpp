@@ -144,8 +144,15 @@ protected:
 #endif
 		SPDLOG_DEBUG("registering scene of type `{}` with id {} at layer {}", name, id, layer);
 		const auto scene_info_ptr = std::make_shared<scene_info>(
-			scene_info{.id = id, .name = name, .scene_ptr = std::make_unique<T>(), .layer = layer, .visible = visible});
+			scene_info{.id = id, .name = name, .scene_ptr = std::make_unique<T>(), .layer = layer});
 		scenes_.push_back(scene_info_ptr);
+
+		for(const auto &scene_info: scenes_) {
+			if(scene_info->id == id) {
+				scene_info->scene_ptr->set_visible(visible);
+			}
+		}
+
 		sort_scenes();
 		return id;
 	}
@@ -163,7 +170,7 @@ protected:
 				if(const auto err = (*it)->scene_ptr->end().unwrap(); err) {
 					return error(std::format("error ending scene with id: {} name: {}", id, (*it)->name), *err);
 				}
-				(*it)->scene_ptr.reset();
+				(*it)->scene_ptr.reset(nullptr);
 			}
 			scenes_.erase(it);
 			return true;
@@ -220,7 +227,6 @@ private:
 		std::string name;
 		std::unique_ptr<scene> scene_ptr{nullptr};
 		int layer{};
-		bool visible{};
 	};
 
 	std::vector<std::shared_ptr<scene_info>> scenes_;
@@ -263,6 +269,11 @@ private:
 
 	auto on_version_click() -> result<>;
 	int version_click_{0};
+
+	auto on_options_click() -> result<>;
+	int options_click_{0};
+	int options_scene_ = 0;
+
 	static auto open_url(const std::string &url) -> result<>;
 
 	bool full_screen_{false};

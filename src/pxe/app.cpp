@@ -1,15 +1,14 @@
 // SPDX-FileCopyrightText: 2026 Juan Medina
 // SPDX-License-Identifier: MIT
 
-#include "pxe/events.hpp"
-#include "pxe/scenes/scene.hpp"
 #include <pxe/app.hpp>
 #include <pxe/components/component.hpp>
+#include <pxe/events.hpp>
 #include <pxe/render/sprite_sheet.hpp>
 #include <pxe/result.hpp>
 #include <pxe/scenes/game_overlay.hpp>
-
-#include "spdlog/fmt/bundled/base.h"
+#include <pxe/scenes/options.hpp>
+#include <pxe/scenes/scene.hpp>
 
 #include <raylib.h>
 
@@ -61,6 +60,7 @@ auto app::init() -> result<> {
 	}
 
 	version_click_ = on_event<game_overlay::version_click>(this, &app::on_version_click);
+	options_click_ = on_event<game_overlay::options_click>(this, &app::on_options_click);
 
 	SPDLOG_INFO("init application");
 
@@ -82,6 +82,7 @@ auto app::init() -> result<> {
 
 	// register default scenes
 	register_scene<game_overlay>(999);
+	options_scene_ = register_scene<options>(1000, false);
 
 	return true;
 }
@@ -100,6 +101,7 @@ auto app::init_scenes() -> result<> {
 
 auto app::end() -> result<> {
 	unsubscribe(version_click_);
+	unsubscribe(options_click_);
 
 	// end scenes
 	SPDLOG_INFO("ending scenes");
@@ -174,7 +176,7 @@ auto app::update() -> result<> {
 
 	// update scenes
 	for(auto &info: scenes_) {
-		if(!info->visible) {
+		if(!info->scene_ptr->is_visible()) {
 			continue;
 		}
 		if(const auto err = info->scene_ptr->update(GetFrameTime()).unwrap(); err) {
@@ -267,7 +269,7 @@ auto app::draw() const -> result<> {
 
 	// draw scenes
 	for(const auto &info: scenes_) {
-		if(!info->visible) {
+		if(!info->scene_ptr->is_visible()) {
 			continue;
 		}
 		if(const auto err = info->scene_ptr->draw().unwrap(); err) {
@@ -296,7 +298,7 @@ auto app::show_scene(const int id, const bool show) -> result<> {
 	if(const auto err = find_scene_info(id).unwrap(info); err) {
 		return error(std::format("scene with id {} not found", id));
 	}
-	info->visible = show;
+	info->scene_ptr->set_visible(show);
 	if(show) {
 		if(const auto enable_err = info->scene_ptr->show().unwrap(); enable_err) {
 			return error(std::format("failed to show scene with id: {} name: {}", id, info->name), *enable_err);
@@ -616,8 +618,15 @@ auto app::screen_size_changed(const size screen_size) -> result<> {
 	return true;
 }
 
-auto app::on_version_click() -> result<> {
+auto app::on_version_click() -> result<> { // NOLINT(*-convert-member-functions-to-static)
 	return open_url("https://github.com/juan-medina/energy-swap/releases");
+}
+
+auto app::on_options_click() -> result<> {
+	if(const auto err = show_scene(options_scene_).unwrap(); err) {
+		return error("failed to show options scene", *err);
+	}
+	return true;
 }
 
 auto app::parse_version(const std::string &path) -> result<version> {
