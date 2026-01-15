@@ -273,6 +273,8 @@ private:
 
 	auto on_options_click() -> result<>;
 	int options_click_{0};
+	int options_closed_{0};
+	auto on_options_closed() -> result<>;
 	scene_id options_scene_{0};
 
 	static auto open_url(const std::string &url) -> result<>;

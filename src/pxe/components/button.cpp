@@ -27,14 +27,12 @@ auto button::end() -> result<> {
 }
 
 auto button::update(const float delta) -> result<> {
-	if(const auto err = ui_component::update(delta).unwrap(); err) {
-		return error("failed to update base UI component", *err);
+	if(!is_visible()) {
+		return true;
 	}
 
-	if(is_enabled()) {
-		GuiEnable();
-	} else {
-		GuiDisable();
+	if(const auto err = ui_component::update(delta).unwrap(); err) {
+		return error("failed to update base UI component", *err);
 	}
 
 	return true;
@@ -47,6 +45,12 @@ auto button::draw() -> result<> {
 
 	if(!is_visible()) {
 		return true;
+	}
+
+	if(is_enabled()) {
+		GuiEnable();
+	} else {
+		GuiDisable();
 	}
 
 	const auto [x, y] = get_position();

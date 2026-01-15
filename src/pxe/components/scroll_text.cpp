@@ -30,12 +30,6 @@ auto scroll_text::update(const float delta) -> result<> {
 		return error("failed to update base UI component", *err);
 	}
 
-	if(is_enabled()) {
-		GuiEnable();
-	} else {
-		GuiDisable();
-	}
-
 	return true;
 }
 
@@ -47,6 +41,12 @@ auto scroll_text::draw() -> result<> {
 
 	if(!is_visible()) {
 		return true;
+	}
+
+	if(is_enabled()) {
+		GuiEnable();
+	} else {
+		GuiDisable();
 	}
 
 	GuiSetFont(get_font());

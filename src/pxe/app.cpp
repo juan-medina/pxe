@@ -61,6 +61,7 @@ auto app::init() -> result<> {
 
 	version_click_ = on_event<game_overlay::version_click>(this, &app::on_version_click);
 	options_click_ = on_event<game_overlay::options_click>(this, &app::on_options_click);
+	options_closed_ = on_event<options::options_closed>(this, &app::on_options_closed);
 
 	SPDLOG_INFO("init application");
 
@@ -102,6 +103,7 @@ auto app::init_scenes() -> result<> {
 auto app::end() -> result<> {
 	unsubscribe(version_click_);
 	unsubscribe(options_click_);
+	unsubscribe(options_closed_);
 
 	// end scenes
 	SPDLOG_INFO("ending scenes");
@@ -626,6 +628,31 @@ auto app::on_options_click() -> result<> {
 	if(const auto err = show_scene(options_scene_).unwrap(); err) {
 		return error("failed to show options scene", *err);
 	}
+
+	for(const auto &info: scenes_) {
+		if(info->id != options_scene_) {
+			if(const auto err = info->scene_ptr->pause().unwrap(); err) {
+				return error(std::format("failed to pause scene with id: {} ", info->id), *err);
+			}
+		}
+	}
+
+	return true;
+}
+
+auto app::on_options_closed() -> result<> {
+	if(const auto err = hide_scene(options_scene_).unwrap(); err) {
+		return error("failed to hide options scene", *err);
+	}
+
+	for(const auto &info: scenes_) {
+		if(info->id != options_scene_) {
+			if(const auto err = info->scene_ptr->resume().unwrap(); err) {
+				return error(std::format("failed to resume scene with id: {}", info->id), *err);
+			}
+		}
+	}
+
 	return true;
 }
 

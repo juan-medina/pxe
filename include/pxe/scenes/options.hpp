@@ -21,6 +21,8 @@ public:
 	[[nodiscard]] auto draw() -> result<> override;
 	[[nodiscard]] auto layout(size screen_size) -> result<> override;
 
+	struct options_closed {};
+
 private:
 	static auto constexpr window_width = 400;
 	static auto constexpr window_height = 300;

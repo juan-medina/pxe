@@ -16,6 +16,13 @@ auto window::draw() -> result<> {
 	if(!is_visible()) {
 		return true;
 	}
+
+	if(is_enabled()) {
+		GuiEnable();
+	} else {
+		GuiDisable();
+	}
+
 	auto [width, height] = get_size();
 	auto [x, y] = get_position();
 

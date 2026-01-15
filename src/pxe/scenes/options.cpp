@@ -67,7 +67,7 @@ auto options::layout(const size screen_size) -> result<> {
 }
 
 auto options::on_close_window() -> result<> {
-	set_visible(false);
+	get_app().post_event(options_closed{});
 	return true;
 }
 

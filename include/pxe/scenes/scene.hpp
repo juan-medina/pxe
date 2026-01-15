@@ -135,7 +135,18 @@ public:
 		return comp;
 	}
 
+	[[nodiscard]] virtual auto pause() -> result<>;
+
+	[[nodiscard]] virtual auto resume() -> result<>;
+
 private:
+	struct paused_component {
+		size_t id;
+		bool enabled;
+	};
+
+	std::vector<paused_component> paused_components_;
+
 	[[nodiscard]] auto find_component(const size_t id) -> std::vector<child>::iterator {
 		return std::ranges::find_if(children_, [id](const child &c) -> bool { return c.comp->get_id() == id; });
 	}
