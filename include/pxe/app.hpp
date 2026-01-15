@@ -32,6 +32,7 @@
 #endif
 
 namespace pxe {
+
 class sprite_sheet;
 
 class app {
@@ -129,8 +130,8 @@ protected:
 
 	template<typename T>
 		requires std::is_base_of_v<scene, T>
-	auto register_scene(int layer = 0, const bool visible = true) -> int {
-		int id = ++last_scene_id_;
+	auto register_scene(int layer = 0, const bool visible = true) -> scene_id {
+		auto id = ++last_scene_id_;
 
 		std::string name;
 #if defined(__GNUG__) && !defined(__EMSCRIPTEN__) && !defined(__APPLE__)
@@ -159,11 +160,11 @@ protected:
 
 	template<typename T>
 		requires std::is_base_of_v<scene, T>
-	auto register_scene(const bool visible) -> int {
+	auto register_scene(const bool visible) -> scene_id {
 		return register_scene<T>(0, visible);
 	}
 
-	auto unregister_scene(const int id) -> result<> {
+	auto unregister_scene(const scene_id id) -> result<> {
 		const auto it = std::ranges::find_if(scenes_, [id](const auto &scene) -> bool { return scene->id == id; });
 		if(it != scenes_.end()) {
 			if((*it)->scene_ptr) {
@@ -183,13 +184,13 @@ protected:
 			scenes_, [](const auto &scene_a, const auto &scene_b) -> bool { return scene_a->layer < scene_b->layer; });
 	}
 
-	[[nodiscard]] auto show_scene(int id, bool show = true) -> result<>;
+	[[nodiscard]] auto show_scene(scene_id id, bool show = true) -> result<>;
 
-	[[nodiscard]] auto hide_scene(const int id, const bool hide = true) -> result<> {
+	[[nodiscard]] auto hide_scene(const scene_id id, const bool hide = true) -> result<> {
 		return show_scene(id, !hide);
 	}
 
-	[[nodiscard]] auto reset_scene(int id) -> result<>;
+	[[nodiscard]] auto reset_scene(scene_id id) -> result<>;
 
 	[[nodiscard]] auto
 	set_default_font(const std::string &path, int size = 0, int texture_filter = TEXTURE_FILTER_POINT) -> result<>;
@@ -209,7 +210,7 @@ private:
 	int default_font_size_{12};
 
 	bool custom_default_font_{false};
-	int last_scene_id_{0};
+	scene_id last_scene_id_{0};
 
 	std::string title_{"Engine App"};
 	size screen_size_{};
@@ -223,7 +224,7 @@ private:
 	static void log_callback(int log_level, const char *text, va_list args);
 
 	struct scene_info {
-		int id{};
+		scene_id id{};
 		std::string name;
 		std::unique_ptr<scene> scene_ptr{nullptr};
 		int layer{};
@@ -231,7 +232,7 @@ private:
 
 	std::vector<std::shared_ptr<scene_info>> scenes_;
 
-	auto find_scene_info(const int id) -> result<std::shared_ptr<scene_info>> {
+	auto find_scene_info(const scene_id id) -> result<std::shared_ptr<scene_info>> {
 		for(auto &scene_info: scenes_) {
 			if(scene_info->id == id) {
 				return scene_info;
@@ -272,7 +273,7 @@ private:
 
 	auto on_options_click() -> result<>;
 	int options_click_{0};
-	int options_scene_ = 0;
+	scene_id options_scene_{0};
 
 	static auto open_url(const std::string &url) -> result<>;
 

@@ -293,7 +293,7 @@ auto app::draw() const -> result<> {
 	return true;
 }
 
-auto app::show_scene(const int id, const bool show) -> result<> {
+auto app::show_scene(const scene_id id, const bool show) -> result<> {
 	std::shared_ptr<scene_info> info;
 	if(const auto err = find_scene_info(id).unwrap(info); err) {
 		return error(std::format("scene with id {} not found", id));
@@ -313,13 +313,13 @@ auto app::show_scene(const int id, const bool show) -> result<> {
 	return true;
 }
 
-auto app::reset_scene(const int id) -> result<> {
+auto app::reset_scene(const scene_id id) -> result<> {
 	std::shared_ptr<scene_info> info;
 	if(const auto err = find_scene_info(id).unwrap(info); err) {
 		return error(std::format("scene with id {} not found", id));
 	}
 	if(const auto reset_err = info->scene_ptr->reset().unwrap(); reset_err) {
-		return error(std::format("failed to re-enable scene with id: {} name: {}", id, info->name), *reset_err);
+		return error(std::format("failed to reset scene with id: {} name: {}", id, info->name), *reset_err);
 	}
 	SPDLOG_DEBUG("reset scene with id: {} name: {}", id, info->name);
 	// layout on reset

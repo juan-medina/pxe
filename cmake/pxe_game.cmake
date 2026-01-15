@@ -8,6 +8,7 @@ function(pxe_add_game TARGET_NAME)
     if (NOT TARGET_NAME)
         message(FATAL_ERROR "pxe_add_game: TARGET_NAME required")
     endif ()
+
     file(GLOB_RECURSE APP_HEADER_FILES "src/*.hpp")
     file(GLOB_RECURSE APP_SOURCE_FILES "src/*.cpp")
 
@@ -140,4 +141,7 @@ function(pxe_add_game TARGET_NAME)
                 VERBATIM
         )
     endif ()
+
+    target_compile_definitions(${TARGET_NAME} PRIVATE SPDLOG_USE_STD_FORMAT)
+
 endfunction()

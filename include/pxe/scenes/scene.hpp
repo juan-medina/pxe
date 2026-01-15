@@ -22,6 +22,47 @@ namespace pxe {
 
 class app;
 
+struct scene_id {
+	constexpr scene_id() noexcept = default;
+	explicit constexpr scene_id(const std::size_t x) noexcept: v(x) {}
+
+	constexpr auto operator++() noexcept -> scene_id & {
+		++v;
+		return *this;
+	}
+	constexpr auto operator++(int) noexcept -> scene_id {
+		const scene_id tmp = *this;
+		++v;
+		return tmp;
+	}
+
+	[[nodiscard]] constexpr auto value() const noexcept -> std::size_t {
+		return v;
+	}
+
+	friend constexpr auto operator==(const scene_id &a, const scene_id &b) noexcept -> bool {
+		return a.v == b.v;
+	}
+	friend constexpr auto operator!=(const scene_id &a, const scene_id &b) noexcept -> bool {
+		return a.v != b.v;
+	}
+	friend constexpr auto operator<(const scene_id &a, const scene_id &b) noexcept -> bool {
+		return a.v < b.v;
+	}
+	friend constexpr auto operator<=(const scene_id &a, const scene_id &b) noexcept -> bool {
+		return a.v <= b.v;
+	}
+	friend constexpr auto operator>(const scene_id &a, const scene_id &b) noexcept -> bool {
+		return a.v > b.v;
+	}
+	friend constexpr auto operator>=(const scene_id &a, const scene_id &b) noexcept -> bool {
+		return a.v >= b.v;
+	}
+
+private:
+	std::size_t v{0}; // NOLINT(*-non-private-member-variables-in-classes)
+};
+
 class scene: public component {
 public:
 	struct child {
@@ -102,3 +143,20 @@ private:
 	std::vector<child> children_;
 };
 } // namespace pxe
+
+namespace std {
+template<>
+struct hash<pxe::scene_id> {
+	auto operator()(const pxe::scene_id &id) const noexcept -> std::size_t {
+		return std::hash<std::size_t>{}(id.value());
+	}
+};
+
+template<>
+struct formatter<pxe::scene_id>: formatter<std::size_t> {
+	template<typename Format_Context>
+	static auto format(const pxe::scene_id &id, Format_Context &ctx) {
+		return std::formatter<std::size_t>{}.format(id.value(), ctx);
+	}
+};
+} // namespace std

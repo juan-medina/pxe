@@ -58,6 +58,7 @@ endif ()
 add_subdirectory(external/spdlog)
 target_link_libraries(${PROJECT_NAME} PUBLIC spdlog::spdlog_header_only)
 target_compile_definitions(${PROJECT_NAME} PUBLIC SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_TRACE)
+target_compile_definitions(${PROJECT_NAME} PUBLIC SPDLOG_USE_STD_FORMAT)
 
 # raylib
 add_subdirectory(external/raylib)
@@ -73,3 +74,4 @@ if (NOT EMSCRIPTEN)
     add_subdirectory(external/boxer)
     target_link_libraries(${PROJECT_NAME} PUBLIC Boxer)
 endif ()
+

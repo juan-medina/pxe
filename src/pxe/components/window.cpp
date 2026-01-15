@@ -1,7 +1,7 @@
 ﻿// SPDX-FileCopyrightText: 2026 Juan Medina
 // SPDX-License-Identifier: MIT
 
-#include "pxe/app.hpp"
+#include <pxe/app.hpp>
 #include <pxe/components/ui_component.hpp>
 #include <pxe/components/window.hpp>
 #include <pxe/result.hpp>

@@ -10,8 +10,7 @@
 #include <pxe/scenes/game_overlay.hpp>
 #include <pxe/scenes/scene.hpp>
 
-#include "spdlog/fmt/bundled/base.h"
-
+#include <format>
 #include <memory>
 #include <optional>
 
