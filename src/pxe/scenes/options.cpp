@@ -50,7 +50,7 @@ auto options::init(app &app) -> result<> {
 	music_slider_component->set_label_width(40);
 	music_slider_component->set_slider_width(70);
 	music_slider_component->set_muted(false);
-	music_slider_component->set_value(50.0F);
+	music_slider_component->set_value(50);
 
 	std::shared_ptr<audio_slider> sfx_slider_component;
 	if(const auto err = get_component<audio_slider>(sfx_slider_).unwrap(sfx_slider_component); err) {
@@ -61,7 +61,9 @@ auto options::init(app &app) -> result<> {
 	sfx_slider_component->set_label_width(40);
 	sfx_slider_component->set_slider_width(70);
 	sfx_slider_component->set_muted(false);
-	sfx_slider_component->set_value(50.0F);
+	sfx_slider_component->set_value(50);
+
+	slider_change__ = app.bind_event<audio_slider::audio_slider_changed>(this, &options::on_slider_change);
 
 	return true;
 }
@@ -102,7 +104,7 @@ auto options::layout(const size screen_size) -> result<> {
 	// position the music slider inside the window
 	const auto [slider_width, slider_height] = music_slider_component->get_size();
 
-	float slider_y = (screen_height_ / 2) - (slider_height );
+	float slider_y = (screen_height_ / 2) - (slider_height);
 
 	// center slider in the window
 	music_slider_component->set_position({.x = (screen_width_ / 2) - (slider_width / 2), .y = slider_y});
@@ -121,6 +123,19 @@ auto options::layout(const size screen_size) -> result<> {
 
 auto options::on_close_window() -> result<> {
 	get_app().post_event(options_closed{});
+	return true;
+}
+
+auto options::on_slider_change(audio_slider::audio_slider_changed change) -> result<> {
+	const auto value = static_cast<float>(change.value) / 100.0F;
+	if(change.id == music_slider_) {
+		get_app().set_music_volume(value);
+		get_app().set_music_muted(change.muted);
+	} else if(change.id == sfx_slider_) {
+		get_app().set_sfx_volume(value);
+		get_app().set_sfx_muted(change.muted);
+	}
+
 	return true;
 }
 

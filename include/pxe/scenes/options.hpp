@@ -4,6 +4,7 @@
 #pragma once
 
 #include <pxe/app.hpp>
+#include <pxe/components/audio_slider.hpp>
 #include <pxe/components/component.hpp>
 #include <pxe/result.hpp>
 #include <pxe/scenes/scene.hpp>
@@ -37,6 +38,9 @@ private:
 
 	size_t music_slider_{0};
 	size_t sfx_slider_{0};
+
+	size_t slider_change__{0};
+	auto on_slider_change(audio_slider::audio_slider_changed change) -> result<>;
 };
 
 } // namespace pxe

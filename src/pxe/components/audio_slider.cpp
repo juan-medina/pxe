@@ -8,6 +8,8 @@
 
 #include <raylib.h>
 
+#include <algorithm>
+#include <cstddef>
 #include <raygui.h>
 #include <string>
 
@@ -31,8 +33,8 @@ auto audio_slider::draw() -> result<> {
 		return true;
 	}
 
-	auto current_value = current_;
-	auto current_muted = muted_;
+	const auto current_value = current_;
+	const auto current_muted = muted_;
 
 	if(is_enabled()) {
 		GuiEnable();
@@ -50,7 +52,7 @@ auto audio_slider::draw() -> result<> {
 
 	GuiLabel({.x = x, .y = y, .width = static_cast<float>(label_width_), .height = line_height_}, label_.c_str());
 
-	const auto value_str = std::to_string(static_cast<int>(current_)) + " %";
+	const auto value_str = std::to_string(static_cast<int>(internal_current_)) + " %";
 
 	x += static_cast<float>(label_width_);
 
@@ -62,9 +64,9 @@ auto audio_slider::draw() -> result<> {
 	GuiSlider({.x = x, .y = y, .width = static_cast<float>(slider_width_), .height = line_height_},
 			  "",
 			  value_str.c_str(),
-			  &current_,
-			  min_,
-			  max_);
+			  &internal_current_,
+			  internal_min_,
+			  internal_max_);
 
 	if(is_enabled()) {
 		GuiEnable();
@@ -76,9 +78,11 @@ auto audio_slider::draw() -> result<> {
 
 	GuiSetStyle(DEFAULT, TEXT_COLOR_NORMAL, default_text_color);
 
+	current_ = static_cast<size_t>(internal_current_);
+
 	if(current_muted != muted_ || current_value != current_) {
-		if(const auto err = play_click_sound().unwrap(); err) {
-			return error("failed to play click sound", *err);
+		if(const auto err = play_click_sfx().unwrap(); err) {
+			return error("failed to play click sfx", *err);
 		}
 		get_app().post_event(audio_slider_changed{.id = get_id(), .value = current_, .muted = muted_});
 	}

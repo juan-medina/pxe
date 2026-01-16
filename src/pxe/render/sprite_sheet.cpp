@@ -1,9 +1,9 @@
 ﻿// SPDX-FileCopyrightText: 2026 Juan Medina
 // SPDX-License-Identifier: MIT
 
-#include <pxe/render/texture.hpp>
 #include <pxe/components/component.hpp>
 #include <pxe/render/sprite_sheet.hpp>
+#include <pxe/render/texture.hpp>
 #include <pxe/result.hpp>
 
 #include <raylib.h>

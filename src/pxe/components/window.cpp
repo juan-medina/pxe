@@ -32,8 +32,8 @@ auto window::draw() -> result<> {
 	if(const auto value = GuiWindowBox({.x = x, .y = y, .width = width, .height = height}, title_.c_str());
 	   value != 0) {
 		get_app().post_event(close{});
-		if(const auto err = play_click_sound().unwrap(); err) {
-			return error("failed to play click sound on window close", *err);
+		if(const auto err = play_click_sfx().unwrap(); err) {
+			return error("failed to play click sfx on window close", *err);
 		}
 	}
 

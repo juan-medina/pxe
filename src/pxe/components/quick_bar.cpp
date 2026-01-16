@@ -98,8 +98,8 @@ auto quick_bar::update(float delta) -> result<> {
 		if(sprite_ptr->point_inside(mouse)) {
 			sprite_ptr->set_tint(hover_color_);
 			if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-				if(const auto err = play_click_sound().unwrap(); err) {
-					return error("failed to play click sound", *err);
+				if(const auto err = play_click_sfx().unwrap(); err) {
+					return error("failed to play click sfx", *err);
 				}
 				get_app().post_event(button::click{.id = sprite_ptr->get_id()});
 			}

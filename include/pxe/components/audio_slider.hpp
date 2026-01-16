@@ -32,8 +32,9 @@ public:
 		calculate_size();
 	}
 
-	auto set_value(const float value) -> void {
+	auto set_value(const size_t value) -> void {
 		current_ = value;
+		internal_current_ = static_cast<float>(value);
 	}
 
 	auto set_muted(const bool muted) -> void {
@@ -42,7 +43,7 @@ public:
 
 	struct audio_slider_changed {
 		size_t id;
-		float value;
+		size_t value;
 		bool muted;
 	};
 
@@ -50,9 +51,10 @@ private:
 	std::string label_;
 	size_t label_width_{100};
 	size_t slider_width_{200};
-	float min_{0.0F};
-	float max_{100.0F};
-	float current_{0.0F};
+	float internal_min_{0.0F};
+	float internal_max_{100.0F};
+	float internal_current_{0.0F};
+	size_t current_{0};
 	bool muted_{false};
 	float gap_slider_check_{0.0F};
 	float line_height_{0.0F};

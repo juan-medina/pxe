@@ -44,16 +44,16 @@ public:
 		return font_size_;
 	}
 
-	auto set_click_sound(const std::string &sound_name) -> void {
-		click_sound_ = sound_name;
+	auto set_click_sfx(const std::string &sound_name) -> void {
+		click_sfx_ = sound_name;
 	}
 
-	[[nodiscard]] auto play_click_sound() -> result<>;
+	[[nodiscard]] auto play_click_sfx() -> result<>;
 
 private:
 	Font font_{};
 	float font_size_ = 20.0F;
-	std::string click_sound_{"click"};
+	std::string click_sfx_{"click"};
 };
 
 } // namespace pxe

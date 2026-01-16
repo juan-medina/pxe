@@ -96,7 +96,7 @@ public:
 		event_bus_.post(event);
 	}
 
-	[[nodiscard]] auto play_sound(const std::string &name, float volume = 1.0F) -> result<>;
+	[[nodiscard]] auto play_sfx(const std::string &name, float volume = 1.0F) -> result<>;
 
 	[[nodiscard]] auto load_sprite_sheet(const std::string &name, const std::string &path) -> result<>;
 	[[nodiscard]] auto unload_sprite_sheet(const std::string &name) -> result<>;
@@ -116,6 +116,44 @@ public:
 
 	auto close() -> void;
 	auto toggle_fullscreen() -> bool;
+
+	auto set_music_volume(const float volume) -> void {
+		music_volume_ = std::clamp(volume, 0.0F, 1.0F);
+		if(music_playing_) {
+			SetMusicVolume(background_music_, music_volume_);
+		}
+	}
+
+	[[nodiscard]] auto get_music_volume() const -> float {
+		return music_volume_;
+	}
+
+	auto set_music_muted(const bool muted) -> void {
+		music_muted_ = muted;
+		if(music_playing_) {
+			SetMusicVolume(background_music_, music_muted_ ? 0.0F : music_volume_);
+		}
+	}
+
+	[[nodiscard]] auto is_music_muted() const -> bool {
+		return music_muted_;
+	}
+
+	auto set_sfx_volume(const float volume) -> void {
+		sfx_volume_ = std::clamp(volume, 0.0F, 1.0F);
+	}
+
+	[[nodiscard]] auto get_sfx_volume() const -> float {
+		return sfx_volume_;
+	}
+
+	auto set_sfx_muted(const bool muted) -> void {
+		sfx_muted_ = muted;
+	}
+
+	[[nodiscard]] auto is_sfx_muted() const -> bool {
+		return sfx_muted_;
+	}
 
 protected:
 	[[nodiscard]] virtual auto init() -> result<>;
@@ -199,8 +237,8 @@ protected:
 		default_font_size_ = size;
 	}
 
-	[[nodiscard]] auto load_sound(const std::string &name, const std::string &path) -> result<>;
-	[[nodiscard]] auto unload_sound(const std::string &name) -> result<>;
+	[[nodiscard]] auto load_sfx(const std::string &name, const std::string &path) -> result<>;
+	[[nodiscard]] auto unload_sfx(const std::string &name) -> result<>;
 
 private:
 	std::string name_;
@@ -245,11 +283,11 @@ private:
 
 	event_bus event_bus_;
 
-	auto init_sound() -> result<>;
-	auto end_sound() -> result<>;
-	bool sound_initialized_{false};
+	auto init_audio() -> result<>;
+	auto end_audio() -> result<>;
+	bool audio_initialized_{false};
 
-	std::unordered_map<std::string, Sound> sounds_;
+	std::unordered_map<std::string, Sound> sfx_;
 
 	Music background_music_{};
 	bool music_playing_{false};
@@ -281,6 +319,11 @@ private:
 
 	bool full_screen_{false};
 	bool should_exit_{false};
+
+	float music_volume_{0.5F};
+	bool music_muted_{false};
+	float sfx_volume_{1.0F};
+	bool sfx_muted_{false};
 };
 
 } // namespace pxe

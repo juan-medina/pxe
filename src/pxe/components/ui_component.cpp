@@ -21,8 +21,8 @@ auto ui_component::init(app &app) -> result<> {
 	return true;
 }
 
-auto ui_component::play_click_sound() -> result<> {
-	return get_app().play_sound(click_sound_);
+auto ui_component::play_click_sfx() -> result<> {
+	return get_app().play_sfx(click_sfx_);
 }
 
 } // namespace pxe

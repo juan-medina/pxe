@@ -55,7 +55,7 @@ auto app::init() -> result<> {
 		return error("error initializing the application", *err);
 	}
 
-	if(const auto err = init_sound().unwrap(); err) {
+	if(const auto err = init_audio().unwrap(); err) {
 		return error("audio device could not be initialized", *err);
 	}
 
@@ -124,7 +124,7 @@ auto app::end() -> result<> {
 		UnloadFont(default_font_);
 	}
 
-	if(const auto err = end_sound().unwrap(); err) {
+	if(const auto err = end_audio().unwrap(); err) {
 		return error("audio device could not be ended", *err);
 	}
 
@@ -372,40 +372,45 @@ auto app::set_default_font(const std::string &path, const int size, const int te
 	SPDLOG_DEBUG("set default font to {}", path);
 	return true;
 }
-auto app::load_sound(const std::string &name, const std::string &path) -> result<> {
+auto app::load_sfx(const std::string &name, const std::string &path) -> result<> {
 	if(std::ifstream const font_file(path); !font_file.is_open()) {
-		return error(std::format("can not load sound file: {}", path));
+		return error(std::format("can not load sfx file: {}", path));
 	}
 
-	if(sounds_.contains(name)) {
-		return error(std::format("sound with name {} is already loaded", name));
+	if(sfx_.contains(name)) {
+		return error(std::format("sfx with name {} is already loaded", name));
 	}
 
-	Sound const sound = LoadSound(path.c_str());
+	Sound const sfx = LoadSound(path.c_str());
 
-	if(!IsSoundValid(sound)) {
-		return error(std::format("sound not valid from path: {}", path));
+	if(!IsSoundValid(sfx)) {
+		return error(std::format("sfx not valid from path: {}", path));
 	}
 
-	sounds_.emplace(name, sound);
-	SPDLOG_DEBUG("loaded sound {} from {}", name, path);
+	sfx_.emplace(name, sfx);
+	SPDLOG_DEBUG("loaded sfx {} from {}", name, path);
 
 	return true;
 }
 
-auto app::unload_sound(const std::string &name) -> result<> {
-	const auto it = sounds_.find(name);
-	if(it == sounds_.end()) {
-		return error(std::format("can't unload sound with name {}, is not loaded", name));
+auto app::unload_sfx(const std::string &name) -> result<> {
+	const auto it = sfx_.find(name);
+	if(it == sfx_.end()) {
+		return error(std::format("can't unload sfx with name {}, is not loaded", name));
 	}
 
 	UnloadSound(it->second);
-	sounds_.erase(it);
-	SPDLOG_DEBUG("unloaded sound {}", name);
+	sfx_.erase(it);
+	SPDLOG_DEBUG("unloaded sfx {}", name);
 	return true;
 }
 
 auto app::play_music(const std::string &path, const float volume /* - 1.0F*/) -> result<> {
+	if(music_muted_) {
+		SPDLOG_TRACE("music is muted, not playing music {}", path);
+		return true;
+	}
+
 	if(current_music_path_ == path && music_playing_) {
 		SPDLOG_TRACE("already playing music {}", path);
 		return true;
@@ -428,7 +433,7 @@ auto app::play_music(const std::string &path, const float volume /* - 1.0F*/) ->
 	}
 	background_music_.looping = true;
 	PlayMusicStream(background_music_);
-	SetMusicVolume(background_music_, volume);
+	SetMusicVolume(background_music_, volume * music_volume_);
 	music_playing_ = true;
 	current_music_path_ = path;
 	SPDLOG_DEBUG("playing music from {}", path);
@@ -471,14 +476,19 @@ auto app::toggle_fullscreen() -> bool {
 	return full_screen_;
 }
 
-auto app::play_sound(const std::string &name, const float volume /*= 1.0F*/) -> result<> {
-	const auto it = sounds_.find(name);
-	if(it == sounds_.end()) {
-		return error(std::format("can't play sound with name {}, is not loaded", name));
+auto app::play_sfx(const std::string &name, const float volume /*= 1.0F*/) -> result<> {
+	if(sfx_muted_) {
+		SPDLOG_TRACE("sfx is muted, not playing sfx {}", name);
+		return true;
 	}
-	const auto &sound = it->second;
-	SetSoundPitch(sound, volume);
-	PlaySound(sound);
+
+	const auto it = sfx_.find(name);
+	if(it == sfx_.end()) {
+		return error(std::format("can't play sfx with name {}, is not loaded", name));
+	}
+	const auto &sfx = it->second;
+	SetSoundPitch(sfx, volume * sfx_volume_);
+	PlaySound(sfx);
 
 	return true;
 }
@@ -552,29 +562,29 @@ auto app::set_default_font(const Font &font, const int size, const int texture_f
 	GuiSetStyle(DEFAULT, TEXT_SIZE, size);
 }
 
-auto app::init_sound() -> result<> {
+auto app::init_audio() -> result<> {
 	InitAudioDevice();
 	if(IsAudioDeviceReady()) {
-		sound_initialized_ = true;
+		audio_initialized_ = true;
 		SPDLOG_INFO("audio device initialized");
 		return true;
 	}
 	return error("failed to initialize audio device");
 }
 
-auto app::end_sound() -> result<> {
-	for(const auto &[name, sound]: sounds_) {
-		if(IsSoundPlaying(sound)) {
-			StopSound(sound);
-			SPDLOG_DEBUG("stopped playing sound {}", name);
+auto app::end_audio() -> result<> {
+	for(const auto &[name, sfx]: sfx_) {
+		if(IsSoundPlaying(sfx)) {
+			StopSound(sfx);
+			SPDLOG_DEBUG("stopped playing sfx {}", name);
 		}
 	}
 
-	for(const auto &[name, sound]: sounds_) {
-		UnloadSound(sound);
-		SPDLOG_DEBUG("unloaded sound {}", name);
+	for(const auto &[name, sfx]: sfx_) {
+		UnloadSound(sfx);
+		SPDLOG_DEBUG("unloaded sfx {}", name);
 	}
-	sounds_.clear();
+	sfx_.clear();
 
 	if(music_playing_) {
 		if(const auto err = stop_music().unwrap(); err) {
@@ -582,9 +592,9 @@ auto app::end_sound() -> result<> {
 		}
 	}
 
-	if(sound_initialized_) {
+	if(audio_initialized_) {
 		CloseAudioDevice();
-		sound_initialized_ = false;
+		audio_initialized_ = false;
 		SPDLOG_INFO("audio device closed");
 		return true;
 	}
