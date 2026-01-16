@@ -69,6 +69,7 @@ auto app::init() -> result<> {
 	SetConfigFlags(FLAG_WINDOW_RESIZABLE);
 #endif
 	InitWindow(1920, 1080, title_.c_str());
+	SetExitKey(KEY_NULL);
 	SetTargetFPS(60);
 
 #ifdef PLATFORM_DESKTOP
@@ -189,6 +190,22 @@ auto app::update() -> result<> {
 	// dispatch events
 	if(const auto err = event_bus_.dispatch().unwrap(); err) {
 		return error("error dispatching events", *err);
+	}
+
+	if(IsKeyReleased(KEY_ESCAPE)) {
+		std::shared_ptr<scene_info> info;
+		if(const auto err = find_scene_info(options_scene_).unwrap(info); err) {
+			return error("can not find options scene", *err);
+		}
+		if(info->scene_ptr->is_visible()) {
+			if(const auto hide_err = on_options_closed().unwrap(); hide_err) {
+				return error("failed to hide options scene", *hide_err);
+			}
+		} else {
+			if(const auto show_err = on_options_click().unwrap(); show_err) {
+				return error("failed to show options scene", *show_err);
+			}
+		}
 	}
 
 	update_music_stream();
@@ -574,11 +591,13 @@ auto app::end_sound() -> result<> {
 	SPDLOG_WARN("audio device was not initialized");
 	return true;
 }
+
 auto app::update_music_stream() const -> void {
 	if(music_playing_) {
 		UpdateMusicStream(background_music_);
 	}
 }
+
 auto app::screen_size_changed(const size screen_size) -> result<> {
 	screen_size_ = screen_size;
 
