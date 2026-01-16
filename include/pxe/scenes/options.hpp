@@ -24,8 +24,8 @@ public:
 	struct options_closed {};
 
 private:
-	static auto constexpr window_width = 400;
-	static auto constexpr window_height = 300;
+	static auto constexpr window_width = 220;
+	static auto constexpr window_height = 100;
 	Color bg_color_ = {.r = 0x00, .g = 0x00, .b = 0x00, .a = 0x7F}; // #0000007F (50% transparent black)
 
 	float screen_width_ = 0.0F;
@@ -34,6 +34,9 @@ private:
 	size_t window_ = 0;
 	int close_window_ = 0;
 	auto on_close_window() -> result<>;
+
+	size_t music_slider_{0};
+	size_t sfx_slider_{0};
 };
 
 } // namespace pxe
