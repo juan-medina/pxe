@@ -487,7 +487,7 @@ auto app::play_sfx(const std::string &name, const float volume /*= 1.0F*/) -> re
 		return error(std::format("can't play sfx with name {}, is not loaded", name));
 	}
 	const auto &sfx = it->second;
-	SetSoundPitch(sfx, volume * sfx_volume_);
+	SetSoundVolume(sfx, volume * sfx_volume_);
 	PlaySound(sfx);
 
 	return true;

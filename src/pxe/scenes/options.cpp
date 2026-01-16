@@ -10,6 +10,7 @@
 
 #include <raylib.h>
 
+#include <cstddef>
 #include <memory>
 #include <raygui.h>
 
@@ -49,8 +50,6 @@ auto options::init(app &app) -> result<> {
 	music_slider_component->set_label("Music:");
 	music_slider_component->set_label_width(audio_label_width);
 	music_slider_component->set_slider_width(audio_slider_width);
-	music_slider_component->set_muted(false);
-	music_slider_component->set_value(50);
 
 	std::shared_ptr<audio_slider> sfx_slider_component;
 	if(const auto err = get_component<audio_slider>(sfx_slider_).unwrap(sfx_slider_component); err) {
@@ -60,8 +59,6 @@ auto options::init(app &app) -> result<> {
 	sfx_slider_component->set_label("SFX:");
 	sfx_slider_component->set_label_width(audio_label_width);
 	sfx_slider_component->set_slider_width(audio_slider_width);
-	sfx_slider_component->set_muted(false);
-	sfx_slider_component->set_value(50);
 
 	slider_change_ = app.bind_event<audio_slider::audio_slider_changed>(this, &options::on_slider_change);
 
@@ -121,6 +118,22 @@ auto options::layout(const size screen_size) -> result<> {
 	return scene::layout(screen_size);
 }
 
+auto options::show() -> result<> {
+	const auto music_volume = get_app().get_music_volume();
+	const auto music_muted = get_app().is_music_muted();
+	if(const auto err = set_slider_values(music_slider_, music_volume, music_muted).unwrap(); err) {
+		return error("failed to set music slider values", *err);
+	}
+
+	const auto sfx_volume = get_app().get_sfx_volume();
+	const auto sfx_muted = get_app().is_sfx_muted();
+	if(const auto err = set_slider_values(sfx_slider_, sfx_volume, sfx_muted).unwrap(); err) {
+		return error("failed to set sfx slider values", *err);
+	}
+
+	return scene::show();
+}
+
 auto options::on_close_window() -> result<> {
 	get_app().post_event(options_closed{});
 	return true;
@@ -135,6 +148,18 @@ auto options::on_slider_change(const audio_slider::audio_slider_changed &change)
 		get_app().set_sfx_volume(value);
 		get_app().set_sfx_muted(change.muted);
 	}
+
+	return true;
+}
+
+auto options::set_slider_values(const size_t slider, const float value, const bool muted) -> result<> {
+	std::shared_ptr<audio_slider> music_slider_component;
+	if(const auto err = get_component<audio_slider>(slider).unwrap(music_slider_component); err) {
+		return error("failed to get music slider component", *err);
+	}
+
+	music_slider_component->set_value(static_cast<int>(value * 100.0F));
+	music_slider_component->set_muted(muted);
 
 	return true;
 }

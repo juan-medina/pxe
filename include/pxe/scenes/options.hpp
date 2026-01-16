@@ -24,6 +24,8 @@ public:
 
 	struct options_closed {};
 
+	[[nodiscard]] auto show() -> result<> override;
+
 private:
 	static auto constexpr window_width = 300;
 	static auto constexpr window_height = 100;
@@ -44,6 +46,7 @@ private:
 
 	size_t slider_change_{0};
 	auto on_slider_change(const audio_slider::audio_slider_changed &change) -> result<>;
+	auto set_slider_values(size_t slider, float value, bool muted) -> result<>;
 };
 
 } // namespace pxe
