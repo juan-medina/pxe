@@ -89,6 +89,7 @@ auto audio_slider::draw() -> result<> {
 
 	return true;
 }
+
 auto audio_slider::calculate_size() -> void {
 	const auto [gap, line_height] = MeasureTextEx(get_font(), " 100 % ", get_font_size(), 1);
 	const auto check_gap = MeasureTextEx(get_font(), " muted", get_font_size(), 1).x;

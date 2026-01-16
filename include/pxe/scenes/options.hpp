@@ -25,8 +25,11 @@ public:
 	struct options_closed {};
 
 private:
-	static auto constexpr window_width = 220;
+	static auto constexpr window_width = 300;
 	static auto constexpr window_height = 100;
+	static auto constexpr audio_label_width = 40;
+	static auto constexpr audio_slider_width = 140;
+
 	Color bg_color_ = {.r = 0x00, .g = 0x00, .b = 0x00, .a = 0x7F}; // #0000007F (50% transparent black)
 
 	float screen_width_ = 0.0F;
@@ -39,8 +42,8 @@ private:
 	size_t music_slider_{0};
 	size_t sfx_slider_{0};
 
-	size_t slider_change__{0};
-	auto on_slider_change(audio_slider::audio_slider_changed change) -> result<>;
+	size_t slider_change_{0};
+	auto on_slider_change(const audio_slider::audio_slider_changed &change) -> result<>;
 };
 
 } // namespace pxe

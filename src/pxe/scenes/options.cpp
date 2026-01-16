@@ -47,8 +47,8 @@ auto options::init(app &app) -> result<> {
 	}
 
 	music_slider_component->set_label("Music:");
-	music_slider_component->set_label_width(40);
-	music_slider_component->set_slider_width(70);
+	music_slider_component->set_label_width(audio_label_width);
+	music_slider_component->set_slider_width(audio_slider_width);
 	music_slider_component->set_muted(false);
 	music_slider_component->set_value(50);
 
@@ -58,12 +58,12 @@ auto options::init(app &app) -> result<> {
 	}
 
 	sfx_slider_component->set_label("SFX:");
-	sfx_slider_component->set_label_width(40);
-	sfx_slider_component->set_slider_width(70);
+	sfx_slider_component->set_label_width(audio_label_width);
+	sfx_slider_component->set_slider_width(audio_slider_width);
 	sfx_slider_component->set_muted(false);
 	sfx_slider_component->set_value(50);
 
-	slider_change__ = app.bind_event<audio_slider::audio_slider_changed>(this, &options::on_slider_change);
+	slider_change_ = app.bind_event<audio_slider::audio_slider_changed>(this, &options::on_slider_change);
 
 	return true;
 }
@@ -126,7 +126,7 @@ auto options::on_close_window() -> result<> {
 	return true;
 }
 
-auto options::on_slider_change(audio_slider::audio_slider_changed change) -> result<> {
+auto options::on_slider_change(const audio_slider::audio_slider_changed &change) -> result<> {
 	const auto value = static_cast<float>(change.value) / 100.0F;
 	if(change.id == music_slider_) {
 		get_app().set_music_volume(value);
