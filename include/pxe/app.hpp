@@ -8,6 +8,7 @@
 #include <pxe/render/sprite_sheet.hpp>
 #include <pxe/result.hpp>
 #include <pxe/scenes/scene.hpp>
+#include <pxe/settings.hpp>
 
 #include <raylib.h>
 
@@ -324,6 +325,10 @@ private:
 	bool music_muted_{false};
 	float sfx_volume_{1.0F};
 	bool sfx_muted_{false};
+
+	settings settings_;
+
+	auto save_settings() -> result<>;
 };
 
 } // namespace pxe

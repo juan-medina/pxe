@@ -13,3 +13,6 @@
 [submodule "external/jsoncons"]
 	path = external/jsoncons
 	url = https://github.com/danielaparker/jsoncons
+[submodule "external/PlatformFolders"]
+	path = external/PlatformFolders
+	url = https://github.com/sago007/PlatformFolders.git

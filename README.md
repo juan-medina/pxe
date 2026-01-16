@@ -22,6 +22,7 @@ An opinionated 2D game engine built in C++20 using raylib.
 - [spdlog](https://github.com/gabime/spdlog) (licensed under MIT)
 - [Boxer](https://github.com/aaronmjacobs/Boxer) (licensed under MIT)
 - [jsoncons](https://github.com/danielaparker/jsoncons) (licensed under Boost Software License 1.0)
+- [PlatformFolders](https://github.com/sago007/PlatformFolders) (licensed under MIT)
 
 **License**
 

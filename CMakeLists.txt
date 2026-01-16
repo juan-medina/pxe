@@ -69,9 +69,15 @@ target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${CMAKE_CURRENT_SOURCE_
 # jsoncons
 target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/external/jsoncons/include)
 
-# boxer - not on emscripten
+# not on emscripten
 if (NOT EMSCRIPTEN)
+    # boxer
     add_subdirectory(external/boxer)
     target_link_libraries(${PROJECT_NAME} PUBLIC Boxer)
+
+    #PlatformFolders
+    add_subdirectory(external/PlatformFolders)
+    target_link_libraries(${PROJECT_NAME} PRIVATE sago::platform_folders)
+    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/external/PlatformFolders/sago)
 endif ()
 

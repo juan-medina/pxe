@@ -55,6 +55,15 @@ auto app::init() -> result<> {
 		return error("error initializing the application", *err);
 	}
 
+	if(const auto err = settings_.init(team_, name_).unwrap(); err) {
+		return error("error initializing settings", *err);
+	}
+
+	music_volume_ = settings_.get("music.volume", 0.5F);
+	music_muted_ = settings_.get("music.muted", false);
+	sfx_volume_ = settings_.get("sfx.volume", 1.0F);
+	sfx_muted_ = settings_.get("sfx.muted", false);
+
 	if(const auto err = init_audio().unwrap(); err) {
 		return error("audio device could not be initialized", *err);
 	}
@@ -136,6 +145,10 @@ auto app::end() -> result<> {
 		SPDLOG_DEBUG("ended sprite sheet with name: {}", name);
 	}
 	sprite_sheets_.clear();
+
+	if(const auto err = settings_.end().unwrap(); err) {
+		return error("error ending settings", *err);
+	}
 
 	return true;
 }
@@ -406,11 +419,6 @@ auto app::unload_sfx(const std::string &name) -> result<> {
 }
 
 auto app::play_music(const std::string &path, const float volume /* - 1.0F*/) -> result<> {
-	if(music_muted_) {
-		SPDLOG_TRACE("music is muted, not playing music {}", path);
-		return true;
-	}
-
 	if(current_music_path_ == path && music_playing_) {
 		SPDLOG_TRACE("already playing music {}", path);
 		return true;
@@ -433,7 +441,7 @@ auto app::play_music(const std::string &path, const float volume /* - 1.0F*/) ->
 	}
 	background_music_.looping = true;
 	PlayMusicStream(background_music_);
-	SetMusicVolume(background_music_, volume * music_volume_);
+	SetMusicVolume(background_music_, music_muted_ ? 0.0F : volume * music_volume_);
 	music_playing_ = true;
 	current_music_path_ = path;
 	SPDLOG_DEBUG("playing music from {}", path);
@@ -670,6 +678,9 @@ auto app::on_options_click() -> result<> {
 }
 
 auto app::on_options_closed() -> result<> {
+	if(const auto err = save_settings().unwrap(); err) {
+		return error("failed to save settings on options close", *err);
+	}
 	if(const auto err = hide_scene(options_scene_).unwrap(); err) {
 		return error("failed to hide options scene", *err);
 	}
@@ -761,6 +772,18 @@ auto app::open_url(const std::string &url) -> result<> {
 
 	return true;
 #endif
+}
+
+auto app::save_settings() -> result<> {
+	settings_.set("music.volume", music_volume_);
+	settings_.set("music.muted", music_muted_);
+	settings_.set("sfx.volume", sfx_volume_);
+	settings_.set("sfx.muted", sfx_muted_);
+
+	if(const auto err = settings_.save().unwrap(); err) {
+		return error("error saving settings", *err);
+	}
+	return true;
 }
 
 } // namespace pxe
