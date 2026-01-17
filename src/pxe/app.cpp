@@ -172,15 +172,30 @@ auto app::run() -> result<> {
 		return error("error init scenes", *err);
 	}
 
+#ifdef __EMSCRIPTEN__
+	emscripten_set_main_loop_arg(
+		[](void *arg) {
+			auto *self = static_cast<app *>(arg);
+			if(const auto err = self->main_loop().unwrap(); err) {
+				SPDLOG_ERROR("error main_loop: {}", err->get_message());
+				emscripten_cancel_main_loop();
+			}
+		},
+		this,
+		0,
+		true);
+	return true;
+#else
+
 	while(!should_exit_) {
 		should_exit_ = should_exit_ || WindowShouldClose();
-		SetMouseScale(1 / scale_factor_, 1 / scale_factor_);
-		if(const auto err = update().unwrap(); err) {
-			return error("error updating the application", *err);
+		if(const auto err = main_loop().unwrap(); err) {
+			return error("error during main loop", *err);
 		}
-		if(const auto err = draw().unwrap(); err) {
-			return error("error drawing the application", *err);
-		}
+	}
+
+	if(const auto err = loop_result_.unwrap(); err) {
+		return error("error during main loop", *err);
 	}
 
 	if(const auto err = end().unwrap(); err) {
@@ -189,6 +204,7 @@ auto app::run() -> result<> {
 
 	SPDLOG_INFO("application ended");
 	return true;
+#endif
 }
 
 auto app::update() -> result<> {
@@ -664,6 +680,8 @@ auto app::screen_size_changed(const size screen_size) -> result<> {
 		}
 	}
 
+	SetMouseScale(1 / scale_factor_, 1 / scale_factor_);
+
 	return true;
 }
 
@@ -824,6 +842,16 @@ auto app::on_go_to_game() -> result<> {
 auto app::on_back_to_menu() -> result<> {
 	if(const auto err = show_scene(menu_scene_).unwrap(); err) {
 		return error("fail to enable menu scene", *err);
+	}
+	return true;
+}
+
+auto app::main_loop() -> result<> {
+	if(const auto err = update().unwrap(); err) {
+		return error("error updating the application", *err);
+	}
+	if(const auto err = draw().unwrap(); err) {
+		return error("error drawing the application", *err);
 	}
 	return true;
 }

@@ -120,7 +120,6 @@ function(pxe_add_game TARGET_NAME)
                 "--shell-file=${CUSTOM_SHELL}"
                 "--preload-file=${CMAKE_SOURCE_DIR}/resources@resources"
                 "-sUSE_GLFW=3"
-                "-sASYNCIFY"
                 "-sALLOW_MEMORY_GROWTH=1"
                 "--bind"
                 "-sEXPORTED_RUNTIME_METHODS=['HEAPF32','HEAP32','HEAPU8','requestFullscreen']"

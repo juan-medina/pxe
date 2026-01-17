@@ -348,6 +348,8 @@ private:
 
 	int back_to_menu_{0};
 	auto on_back_to_menu() -> result<>;
+
+	[[nodiscard]] auto main_loop() -> result<>;
 };
 
 } // namespace pxe
