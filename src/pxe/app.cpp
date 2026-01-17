@@ -102,6 +102,16 @@ auto app::init() -> result<> {
 	register_scene<game_overlay>(999);
 	options_scene_ = register_scene<options>(1000, false);
 
+	if(const auto err = crt_texture_.init(crt_path).unwrap(); err) {
+		return error("failed to load crt overlay texture", *err);
+	}
+
+	crt_shader_ = LoadShader(crt_shader_vs, crt_shader_fs);
+	if(crt_shader_.id == 0) {
+		return error("failed to load CRT shader");
+	}
+	crt_shader_loaded_ = true;
+
 	return true;
 }
 
@@ -160,6 +170,18 @@ auto app::end() -> result<> {
 		return error("error ending settings", *err);
 	}
 
+	if(const auto err = crt_texture_.end().unwrap(); err) {
+		return error("failed to unload crt overlay texture", *err);
+	}
+
+	if(render_texture_.id != 0) {
+		UnloadRenderTexture(render_texture_);
+	}
+
+	if(shader_texture_.id != 0) {
+		UnloadRenderTexture(shader_texture_);
+	}
+
 	return true;
 }
 
@@ -192,10 +214,6 @@ auto app::run() -> result<> {
 		if(const auto err = main_loop().unwrap(); err) {
 			return error("error during main loop", *err);
 		}
-	}
-
-	if(const auto err = loop_result_.unwrap(); err) {
-		return error("error during main loop", *err);
 	}
 
 	if(const auto err = end().unwrap(); err) {
@@ -322,10 +340,10 @@ void app::log_callback(const int log_level, const char *text, va_list args) {
 }
 
 auto app::draw() const -> result<> {
+	// First pass: render all scenes to render_texture_
 	BeginTextureMode(render_texture_);
 	ClearBackground(clear_color_);
 
-	// draw scenes
 	for(const auto &info: scenes_) {
 		if(!info->scene_ptr->is_visible()) {
 			continue;
@@ -334,15 +352,57 @@ auto app::draw() const -> result<> {
 			return error(std::format("failed to draw scene with id: {} name:", info->id, info->name), *err);
 		}
 	}
-
 	EndTextureMode();
-	BeginDrawing();
-	ClearBackground(BLACK);
+
+	// Second pass: apply CRT shader to shader_texture_
+	BeginTextureMode(shader_texture_);
+	ClearBackground(BLANK);
+
+	// set shader parameters
+	const auto swl = GetShaderLocation(crt_shader_, "screen_width");
+	SetShaderValue(crt_shader_, swl, &drawing_resolution_.width, SHADER_UNIFORM_FLOAT);
+	const auto shl = GetShaderLocation(crt_shader_, "screen_height");
+	SetShaderValue(crt_shader_, shl, &drawing_resolution_.height, SHADER_UNIFORM_FLOAT);
+	const auto sh_cb = GetShaderLocation(crt_shader_, "color_bleed");
+	SetShaderValue(crt_shader_, sh_cb, &color_bleed_, SHADER_UNIFORM_INT);
+	const auto sh_sl = GetShaderLocation(crt_shader_, "scan_lines");
+	SetShaderValue(crt_shader_, sh_sl, &scan_lines_, SHADER_UNIFORM_INT);
+
+	// Apply shader to render_texture_ and draw to shader_texture_
+	BeginShaderMode(crt_shader_);
 	DrawTexturePro(render_texture_.texture,
 				   {.x = 0.0F,
 					.y = 0.0F,
 					.width = static_cast<float>(render_texture_.texture.width),
 					.height = static_cast<float>(-render_texture_.texture.height)},
+				   {.x = 0.0F, .y = 0.0F, .width = drawing_resolution_.width, .height = drawing_resolution_.height},
+				   {.x = 0.0F, .y = 0.0F},
+				   0.0F,
+				   WHITE);
+	EndShaderMode();
+
+	// Draw CRT overlay on top
+
+	if(crt_enabled_) {
+		const auto size = crt_texture_.get_size();
+		const auto origin = Rectangle(0, 0, size.width, size.height);
+		const auto destination = Rectangle(0, 0, drawing_resolution_.width, drawing_resolution_.height);
+
+		if(const auto err = crt_texture_.draw(origin, destination, WHITE, 0.0F, {.x = 0.0F, .y = 0.0F}).unwrap(); err) {
+			return error("failed to draw crt overlay texture", *err);
+		}
+	}
+
+	EndTextureMode();
+
+	// Final pass: draw shader_texture_ to screen
+	BeginDrawing();
+	ClearBackground(BLACK);
+	DrawTexturePro(shader_texture_.texture,
+				   {.x = 0.0F,
+					.y = 0.0F,
+					.width = static_cast<float>(shader_texture_.texture.width),
+					.height = static_cast<float>(-shader_texture_.texture.height)},
 				   {.x = 0.0F, .y = 0.0F, .width = screen_size_.width, .height = screen_size_.height},
 				   {.x = 0.0F, .y = 0.0F},
 				   0.0F,
@@ -669,8 +729,17 @@ auto app::screen_size_changed(const size screen_size) -> result<> {
 	if(render_texture_.id == 0) {
 		return error("failed to create render texture on screen size change");
 	}
-
 	SetTextureFilter(render_texture_.texture, TEXTURE_FILTER_POINT);
+
+	if(shader_texture_.id != 0) {
+		UnloadRenderTexture(shader_texture_);
+	}
+	shader_texture_ =
+		LoadRenderTexture(static_cast<int>(drawing_resolution_.width), static_cast<int>(drawing_resolution_.height));
+	if(shader_texture_.id == 0) {
+		return error("failed to create shader render texture on screen size change");
+	}
+	SetTextureFilter(shader_texture_.texture, TEXTURE_FILTER_POINT);
 
 	// screen size changed, tell scenes to layout
 	for(const auto &scene_info: scenes_) {

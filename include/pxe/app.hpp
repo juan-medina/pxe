@@ -6,6 +6,7 @@
 #include <pxe/components/component.hpp>
 #include <pxe/events.hpp>
 #include <pxe/render/sprite_sheet.hpp>
+#include <pxe/render/texture.hpp>
 #include <pxe/result.hpp>
 #include <pxe/scenes/scene.hpp>
 #include <pxe/settings.hpp>
@@ -269,7 +270,7 @@ private:
 	static void log_callback(int log_level, const char *text, va_list args);
 
 	struct scene_info {
-		scene_id id{};
+		scene_id id;
 		std::string name;
 		std::unique_ptr<scene> scene_ptr{nullptr};
 		int layer{};
@@ -350,6 +351,19 @@ private:
 	auto on_back_to_menu() -> result<>;
 
 	[[nodiscard]] auto main_loop() -> result<>;
+
+	texture crt_texture_;
+	static auto constexpr crt_path = "resources/bg/crt.png";
+
+	Shader crt_shader_{};
+	bool crt_shader_loaded_ = false;
+	static auto constexpr crt_shader_vs = "resources/shaders/crt.vs";
+	static auto constexpr crt_shader_fs = "resources/shaders/crt.fs";
+	RenderTexture2D shader_texture_{};
+
+	int color_bleed_ = 1;
+	int scan_lines_ = 1;
+	bool crt_enabled_ = true;
 };
 
 } // namespace pxe

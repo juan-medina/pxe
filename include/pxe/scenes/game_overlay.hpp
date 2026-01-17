@@ -31,7 +31,8 @@ private:
 	size_t version_display_ = 0;
 	size_t quick_bar_ = 0;
 
-	static constexpr auto margin = 10.0F;
+	static constexpr auto margin = 15.0F;
+	static constexpr auto bar_gap = 15.0F;
 	static constexpr auto sprite_sheet = "sprites";
 	static constexpr auto normal = Color{.r = 0xFF, .g = 0xFF, .b = 0xFF, .a = 0x3C};
 	static constexpr auto hover = Color{.r = 0xFF, .g = 0xFF, .b = 0xFF, .a = 0x7F};

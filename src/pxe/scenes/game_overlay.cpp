@@ -83,7 +83,6 @@ auto game_overlay::layout(const size screen_size) -> result<> {
 		return error("failed to get quick bar for layout", *err);
 	}
 
-	auto constexpr bar_gap = 5.0F;
 	auto [bar_width, bar_height] = quick_bar_ptr->get_size();
 
 	const auto x = screen_size.width - (bar_width / 2) - bar_gap;
