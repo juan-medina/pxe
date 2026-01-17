@@ -7,6 +7,8 @@
 #include <pxe/render/sprite_sheet.hpp>
 #include <pxe/result.hpp>
 #include <pxe/scenes/game_overlay.hpp>
+#include <pxe/scenes/license.hpp>
+#include <pxe/scenes/menu.hpp>
 #include <pxe/scenes/options.hpp>
 #include <pxe/scenes/scene.hpp>
 
@@ -71,6 +73,9 @@ auto app::init() -> result<> {
 	version_click_ = on_event<game_overlay::version_click>(this, &app::on_version_click);
 	options_click_ = on_event<game_overlay::options_click>(this, &app::on_options_click);
 	options_closed_ = on_event<options::options_closed>(this, &app::on_options_closed);
+	license_accepted_ = on_event<license::accepted>(this, &app::on_license_accepted);
+	go_to_game_ = on_event<menu::go_to_game>(this, &app::on_go_to_game);
+	back_to_menu_ = on_event<back_to_menu>(this, &app::on_back_to_menu);
 
 	SPDLOG_INFO("init application");
 
@@ -92,6 +97,8 @@ auto app::init() -> result<> {
 	default_font_ = GetFontDefault();
 
 	// register default scenes
+	license_scene_ = register_scene<license>();
+	menu_scene_ = register_scene<menu>(false);
 	register_scene<game_overlay>(999);
 	options_scene_ = register_scene<options>(1000, false);
 
@@ -114,6 +121,9 @@ auto app::end() -> result<> {
 	unsubscribe(version_click_);
 	unsubscribe(options_click_);
 	unsubscribe(options_closed_);
+	unsubscribe(license_accepted_);
+	unsubscribe(go_to_game_);
+	unsubscribe(back_to_menu_);
 
 	// end scenes
 	SPDLOG_INFO("ending scenes");
@@ -782,6 +792,38 @@ auto app::save_settings() -> result<> {
 
 	if(const auto err = settings_.save().unwrap(); err) {
 		return error("error saving settings", *err);
+	}
+	return true;
+}
+
+auto app::on_license_accepted() -> result<> {
+	auto err = hide_scene(license_scene_).unwrap();
+	if(err) {
+		return error("fail to disable license scene", *err);
+	}
+
+	if(err = show_scene(menu_scene_).unwrap(); err) {
+		return error("fail to enable menu scene", *err);
+	}
+
+	return true;
+}
+
+auto app::on_go_to_game() -> result<> {
+	auto err = hide_scene(menu_scene_).unwrap();
+	if(err) {
+		return error("fail to disable menu scene", *err);
+	}
+
+	if(err = show_scene(main_scene_).unwrap(); err) {
+		return error("fail to enable main scene", *err);
+	}
+
+	return true;
+}
+auto app::on_back_to_menu() -> result<> {
+	if(const auto err = show_scene(menu_scene_).unwrap(); err) {
+		return error("fail to enable menu scene", *err);
 	}
 	return true;
 }

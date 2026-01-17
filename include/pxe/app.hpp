@@ -156,6 +156,12 @@ public:
 		return sfx_muted_;
 	}
 
+	auto set_main_scene(const scene_id &scene) -> void {
+		main_scene_ = scene;
+	}
+
+	struct back_to_menu {};
+
 protected:
 	[[nodiscard]] virtual auto init() -> result<>;
 	[[nodiscard]] virtual auto init_scenes() -> result<>;
@@ -329,6 +335,19 @@ private:
 	settings settings_;
 
 	auto save_settings() -> result<>;
+
+	scene_id main_scene_{0};
+
+	scene_id license_scene_{0};
+	int license_accepted_{0};
+	auto on_license_accepted() -> result<>;
+
+	scene_id menu_scene_{0};
+	int go_to_game_{0};
+	auto on_go_to_game() -> result<>;
+
+	int back_to_menu_{0};
+	auto on_back_to_menu() -> result<>;
 };
 
 } // namespace pxe
