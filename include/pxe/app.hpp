@@ -187,6 +187,18 @@ public:
 		scan_lines_ = enabled ? 1 : 0;
 	}
 
+	template<typename T>
+	auto get_setting(const std::string &key, T default_value) -> T {
+		return settings_.get(key, default_value);
+	}
+
+	template<typename T>
+	auto set_setting(const std::string &key, const T &value) -> void {
+		settings_.set(key, value);
+	}
+
+	auto save_settings() -> result<>;
+
 protected:
 	[[nodiscard]] virtual auto init() -> result<>;
 	[[nodiscard]] virtual auto init_scenes() -> result<>;
@@ -358,8 +370,6 @@ private:
 	bool sfx_muted_{false};
 
 	settings settings_;
-
-	auto save_settings() -> result<>;
 
 	scene_id main_scene_{0};
 
