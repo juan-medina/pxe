@@ -4,7 +4,7 @@
 #include <pxe/app.hpp>
 #include <pxe/components/button.hpp>
 #include <pxe/components/component.hpp>
-#include <pxe/components/label.hpp>
+#include <pxe/components/sprite.hpp>
 #include <pxe/result.hpp>
 #include <pxe/scenes/menu.hpp>
 #include <pxe/scenes/scene.hpp>
@@ -19,8 +19,6 @@ auto menu::init(app &app) -> result<> {
 	if(const auto err = scene::init(app).unwrap(); err) {
 		return error("failed to initialize base component", *err);
 	}
-
-	SPDLOG_INFO("menu scene initialized");
 
 	if(const auto err = register_component<button>().unwrap(play_button_); err) {
 		return error("failed to register play button component", *err);
@@ -38,36 +36,42 @@ auto menu::init(app &app) -> result<> {
 
 	button_click_ = app.bind_event<button::click>(this, &menu::on_button_click);
 
-	if(const auto err = register_component<label>().unwrap(title_); err) {
+	if(const auto err = app.load_sprite_sheet(sprite_sheet_name, sprite_sheet_path).unwrap(); err) {
+		return error("failed to initialize sprite sheet", *err);
+	}
+
+	if(const auto err = register_component<sprite>(sprite_sheet_name, logo_sprite).unwrap(title_); err) {
 		return error("failed to register title label", *err);
 	}
 
-	std::shared_ptr<label> title;
-	if(const auto err = get_component<label>(title_).unwrap(title); err) {
-		return error("failed to get title label component", *err);
+	std::shared_ptr<sprite> title;
+	if(const auto err = get_component<sprite>(title_).unwrap(title); err) {
+		return error("failed to get title sprite component", *err);
 	}
 
-	title->set_text("Energy Swap");
-	title->set_font_size(60);
+	SPDLOG_INFO("menu scene initialized");
 
 	return true;
 }
 
 auto menu::end() -> result<> {
 	get_app().unsubscribe(button_click_);
+	if(const auto err = get_app().unload_sprite_sheet(sprite_sheet_name).unwrap(); err) {
+		return error("failed to end sprite sheet", *err);
+	}
 	return scene::end();
 }
 
 auto menu::layout(const size screen_size) -> result<> {
-	std::shared_ptr<label> title;
-	if(const auto err = get_component<label>(title_).unwrap(title); err) {
-		return error("failed to get title label component", *err);
+	std::shared_ptr<sprite> title;
+	if(const auto err = get_component<sprite>(title_).unwrap(title); err) {
+		return error("failed to get title sprite component", *err);
 	}
 
-	const auto [label_width, label_height] = title->get_size();
+	const auto [tittle_width, title_height] = title->get_size();
 	title->set_position({
-		.x = (screen_size.width - label_width) / 2.0F,
-		.y = (screen_size.height * 0.2F) - (label_height / 2.0F),
+		.x = screen_size.width / 2.0F,
+		.y = screen_size.height / 2.0F,
 	});
 
 	std::shared_ptr<button> play_button;
@@ -78,7 +82,7 @@ auto menu::layout(const size screen_size) -> result<> {
 	const auto [button_width, button_height] = play_button->get_size();
 	play_button->set_position({
 		.x = (screen_size.width - button_width) / 2.0F,
-		.y = (screen_size.height - button_height) / 2.0F,
+		.y = ((screen_size.height - button_height) / 2.0F) + title_height,
 	});
 
 	return true;
