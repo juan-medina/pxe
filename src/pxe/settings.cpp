@@ -1,4 +1,4 @@
-﻿// SPDX-FileCopyrightText: 2026 Juan Medina
+// SPDX-FileCopyrightText: 2026 Juan Medina
 // SPDX-License-Identifier: MIT
 
 #include <pxe/result.hpp>
@@ -158,7 +158,10 @@ auto settings::save() const -> result<> {
 		return error(std::format("can't open settings file for writing: {}", file_path_.string()));
 	}
 
-	file << json << '\n';
+	jsoncons::json_options options;
+	options.indent_size(2);
+	file << jsoncons::pretty_print(json, options) << '\n';
+
 	if(file.fail()) {
 		return error(std::format("failed writing settings to file: {}", file_path_.string()));
 	}
