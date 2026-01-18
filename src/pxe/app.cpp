@@ -67,7 +67,7 @@ auto app::init() -> result<> {
 	sfx_muted_ = settings_.get("sfx.muted", false);
 	crt_enabled_ = settings_.get("video.crt_enabled", true);
 	scan_lines_ = settings_.get("video.scan_lines", 1);
-	color_bleed_ = settings_.get("video.color_bleed", 0);
+	color_bleed_ = settings_.get("video.color_bleed", 1);
 
 	if(const auto err = init_audio().unwrap(); err) {
 		return error("audio device could not be initialized", *err);

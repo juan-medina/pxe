@@ -387,7 +387,7 @@ private:
 
 	bool crt_enabled_ = true;
 	int scan_lines_ = 1;
-	int color_bleed_ = 0;
+	int color_bleed_ = 1;
 };
 
 } // namespace pxe
