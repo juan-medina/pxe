@@ -34,8 +34,8 @@ private:
 	static constexpr auto margin = 15.0F;
 	static constexpr auto bar_gap = 15.0F;
 	static constexpr auto sprite_sheet = "sprites";
-	static constexpr auto normal = Color{.r = 0xFF, .g = 0xFF, .b = 0xFF, .a = 0x3C};
-	static constexpr auto hover = Color{.r = 0xFF, .g = 0xFF, .b = 0xFF, .a = 0x7F};
+	static constexpr auto normal = Color{.r = 0xFF, .g = 0xFF, .b = 0xFF, .a = 0x7F};
+	static constexpr auto hover = Color{.r = 0xFF, .g = 0xFF, .b = 0xFF, .a = 0xC0};
 	static constexpr auto gap = 5.0F;
 
 	size_t close_button_ = 0;

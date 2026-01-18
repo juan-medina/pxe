@@ -5,6 +5,7 @@
 
 #include <pxe/app.hpp>
 #include <pxe/components/audio_slider.hpp>
+#include <pxe/components/checkbox.hpp>
 #include <pxe/components/component.hpp>
 #include <pxe/result.hpp>
 #include <pxe/scenes/scene.hpp>
@@ -28,7 +29,7 @@ public:
 
 private:
 	static auto constexpr window_width = 300;
-	static auto constexpr window_height = 100;
+	static auto constexpr window_height = 130;
 	static auto constexpr audio_label_width = 40;
 	static auto constexpr audio_slider_width = 140;
 
@@ -37,6 +38,8 @@ private:
 	float screen_width_ = 0.0F;
 	float screen_height_ = 0.0F;
 
+	static constexpr auto control_row_gap = 5.0F;
+
 	size_t window_ = 0;
 	int close_window_ = 0;
 	auto on_close_window() -> result<>;
@@ -44,9 +47,18 @@ private:
 	size_t music_slider_{0};
 	size_t sfx_slider_{0};
 
-	size_t slider_change_{0};
+	int slider_change_{0};
 	auto on_slider_change(const audio_slider::audio_slider_changed &change) -> result<>;
 	auto set_slider_values(size_t slider, float value, bool muted) -> result<>;
+
+	size_t crt_cb_{0};
+	size_t scan_lines_cb_{0};
+	size_t color_bleed_cb_{0};
+
+	auto set_checkbox_value(size_t cb, bool value) -> result<>;
+
+	int checkbox_changed_{0};
+	auto on_checkbox_changed(const checkbox::checkbox_changed &change) -> result<>;
 };
 
 } // namespace pxe

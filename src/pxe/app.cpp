@@ -65,6 +65,9 @@ auto app::init() -> result<> {
 	music_muted_ = settings_.get("music.muted", false);
 	sfx_volume_ = settings_.get("sfx.volume", 1.0F);
 	sfx_muted_ = settings_.get("sfx.muted", false);
+	crt_enabled_ = settings_.get("video.crt_enabled", true);
+	scan_lines_ = settings_.get("video.scan_lines", 1);
+	color_bleed_ = settings_.get("video.color_bleed", 0);
 
 	if(const auto err = init_audio().unwrap(); err) {
 		return error("audio device could not be initialized", *err);
@@ -876,6 +879,9 @@ auto app::save_settings() -> result<> {
 	settings_.set("music.muted", music_muted_);
 	settings_.set("sfx.volume", sfx_volume_);
 	settings_.set("sfx.muted", sfx_muted_);
+	settings_.set("video.crt_enabled", crt_enabled_);
+	settings_.set("video.scan_lines", scan_lines_);
+	settings_.set("video.color_bleed", color_bleed_);
 
 	if(const auto err = settings_.save().unwrap(); err) {
 		return error("error saving settings", *err);

@@ -163,6 +163,30 @@ public:
 
 	struct back_to_menu {};
 
+	[[nodiscard]] auto is_crt_enabled() const -> bool {
+		return crt_enabled_;
+	}
+
+	[[nodiscard]] auto is_color_bleed_enabled() const -> bool {
+		return color_bleed_ == 1;
+	}
+
+	[[nodiscard]] auto is_scan_lines_enabled() const -> bool {
+		return scan_lines_ == 1;
+	}
+
+	auto set_crt_enabled(const bool enabled) -> void {
+		crt_enabled_ = enabled;
+	}
+
+	auto set_color_bleed_enabled(const bool enabled) -> void {
+		color_bleed_ = enabled ? 1 : 0;
+	}
+
+	auto set_scan_lines_enabled(const bool enabled) -> void {
+		scan_lines_ = enabled ? 1 : 0;
+	}
+
 protected:
 	[[nodiscard]] virtual auto init() -> result<>;
 	[[nodiscard]] virtual auto init_scenes() -> result<>;
@@ -361,9 +385,9 @@ private:
 	static auto constexpr crt_shader_fs = "resources/shaders/crt.fs";
 	RenderTexture2D shader_texture_{};
 
-	int color_bleed_ = 1;
-	int scan_lines_ = 1;
 	bool crt_enabled_ = true;
+	int scan_lines_ = 1;
+	int color_bleed_ = 0;
 };
 
 } // namespace pxe
