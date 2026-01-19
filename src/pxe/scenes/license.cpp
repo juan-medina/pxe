@@ -17,6 +17,7 @@
 #include <optional>
 #include <spdlog/spdlog.h>
 #include <string>
+#include <raygui.h>
 
 namespace pxe {
 
@@ -56,7 +57,7 @@ auto license::init(app &app) -> result<> {
 	if(const auto err = get_component<button>(accept_button_).unwrap(button_ptr); err) {
 		return error("failed to get accept button component", *err);
 	}
-	button_ptr->set_text("Accept");
+	button_ptr->set_text(GuiIconText(ICON_OK_TICK, "Accept"));
 	button_ptr->set_position({.x = 0, .y = 0});
 	button_ptr->set_size({.width = 60, .height = 30});
 

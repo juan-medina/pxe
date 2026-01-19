@@ -11,6 +11,7 @@
 
 #include <memory>
 #include <optional>
+#include <raygui.h>
 #include <spdlog/spdlog.h>
 
 namespace pxe {
@@ -29,7 +30,7 @@ auto menu::init(app &app) -> result<> {
 		return error("failed to get play button component", *err);
 	}
 
-	play_button->set_text("Play!");
+	play_button->set_text(GuiIconText(ICON_PLAYER_PLAY, "Play"));
 	play_button->set_position({.x = 0, .y = 0});
 	play_button->set_size({.width = 80, .height = 35});
 	play_button->set_font_size(large_font_size);
