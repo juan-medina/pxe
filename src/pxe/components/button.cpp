@@ -90,6 +90,24 @@ auto button::draw() -> result<> {
 			case controller_button_position::top_right:
 				pos.x += size.width;
 				break;
+			case controller_button_position::bottom_center:
+				pos.x += size.width / 2.0F;
+				pos.y += size.height;
+				break;
+			case controller_button_position::top_center:
+				pos.x += size.width / 2.0F;
+				break;
+			case controller_button_position::left_middle:
+				pos.y += size.height / 2.0F;
+				break;
+			case controller_button_position::right_middle:
+				pos.x += size.width;
+				pos.y += size.height / 2.0F;
+				break;
+			case controller_button_position::center:
+				pos.x += size.width / 2.0F;
+				pos.y += size.height / 2.0F;
+				break;
 			}
 			if(const auto err = get_app().draw_sprite(buttons_sprite_list, button_sprite_, pos).unwrap(); err) {
 				return error("failed to draw button sprite", *err);

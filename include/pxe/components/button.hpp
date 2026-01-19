@@ -45,7 +45,17 @@ public:
 		size_t id{};
 	};
 
-	enum class controller_button_position : std::uint8_t { bottom_left, bottom_right, top_left, top_right };
+	enum class controller_button_position : std::uint8_t {
+		bottom_left,
+		bottom_right,
+		bottom_center,
+		top_left,
+		top_right,
+		top_center,
+		left_middle,
+		right_middle,
+		center,
+	};
 
 	auto set_controller_button(int button) -> void;
 	auto set_controller_button_position(controller_button_position pos) -> void {
