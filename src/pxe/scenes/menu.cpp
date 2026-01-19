@@ -9,6 +9,8 @@
 #include <pxe/scenes/menu.hpp>
 #include <pxe/scenes/scene.hpp>
 
+#include <raylib.h>
+
 #include <memory>
 #include <optional>
 #include <raygui.h>
@@ -34,6 +36,7 @@ auto menu::init(app &app) -> result<> {
 	play_button->set_position({.x = 0, .y = 0});
 	play_button->set_size({.width = 80, .height = 35});
 	play_button->set_font_size(large_font_size);
+	play_button->set_game_pad_button(GAMEPAD_BUTTON_RIGHT_FACE_DOWN);
 
 	button_click_ = app.bind_event<button::click>(this, &menu::on_button_click);
 

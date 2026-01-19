@@ -44,8 +44,14 @@ public:
 		size_t id{};
 	};
 
+	auto set_game_pad_button(const int button) -> void {
+		game_pad_button_ = button;
+	}
+
 private:
 	std::string text_{"Button"};
+	int game_pad_button_{-1};
+	[[nodiscard]] auto do_click() -> result<>;
 };
 
 } // namespace pxe

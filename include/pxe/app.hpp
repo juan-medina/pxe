@@ -199,6 +199,10 @@ public:
 
 	auto save_settings() -> result<>;
 
+	[[nodiscard]] auto is_in_controller_mode() const -> bool {
+		return in_controller_mode_;
+	}
+
 protected:
 	[[nodiscard]] virtual auto init() -> result<>;
 	[[nodiscard]] virtual auto init_scenes() -> result<>;
@@ -398,6 +402,12 @@ private:
 	bool crt_enabled_ = true;
 	int scan_lines_ = 1;
 	int color_bleed_ = 1;
+
+	bool in_controller_mode_ = false;
+	float mouse_inactive_time_ = 0.0f;
+	static constexpr float controller_mode_grace_period_ = 2.0f;
+	auto update_controller_mode(float delta_time) -> void;
+
 };
 
 } // namespace pxe

@@ -237,12 +237,13 @@ auto app::update() -> result<> {
 		}
 	}
 
+	const auto delta = GetFrameTime();
 	// update scenes
 	for(auto &info: scenes_) {
 		if(!info->scene_ptr->is_visible()) {
 			continue;
 		}
-		if(const auto err = info->scene_ptr->update(GetFrameTime()).unwrap(); err) {
+		if(const auto err = info->scene_ptr->update(delta).unwrap(); err) {
 			return error(std::format("failed to update scene with id: {} name: {}", info->id, info->name), *err);
 		}
 	}
@@ -269,6 +270,8 @@ auto app::update() -> result<> {
 	}
 
 	update_music_stream();
+
+	update_controller_mode(delta);
 
 	return true;
 }
@@ -922,6 +925,13 @@ auto app::on_back_to_menu() -> result<> {
 }
 
 auto app::main_loop() -> result<> {
+	if(in_controller_mode_) {
+		HideCursor();
+		GuiLock();
+	}else {
+		GuiUnlock();
+		ShowCursor();
+	}
 	if(const auto err = update().unwrap(); err) {
 		return error("error updating the application", *err);
 	}
@@ -930,5 +940,27 @@ auto app::main_loop() -> result<> {
 	}
 	return true;
 }
+
+auto app::update_controller_mode(float delta_time) -> void {
+	if(!IsGamepadAvailable(0)) {
+		in_controller_mode_ = false;
+		mouse_inactive_time_ = 0.0f;
+		return;
+	}
+
+	constexpr auto delta_threshold = 2.0F;
+	const auto [mouse_delta_x, mouse_delta_y] = GetMouseDelta();
+	bool mouse_active = (mouse_delta_x > delta_threshold) || (mouse_delta_y > delta_threshold) ||
+						IsMouseButtonDown(0) || IsMouseButtonDown(1) || IsMouseButtonDown(2);
+
+	if(mouse_active) {
+		mouse_inactive_time_ = 0.0f;
+		in_controller_mode_ = false;
+	} else {
+		mouse_inactive_time_ += delta_time;
+		in_controller_mode_ = (mouse_inactive_time_ > controller_mode_grace_period_);
+	}
+}
+
 
 } // namespace pxe

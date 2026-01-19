@@ -35,6 +35,14 @@ auto button::update(const float delta) -> result<> {
 		return error("failed to update base UI component", *err);
 	}
 
+	if(is_enabled()) {
+		if(game_pad_button_ != -1 && IsGamepadButtonPressed(0, game_pad_button_)) {
+			if(get_app().is_in_controller_mode()) {
+				return do_click();
+			}
+		}
+	}
+
 	return true;
 }
 
@@ -60,12 +68,17 @@ auto button::draw() -> result<> {
 	GuiSetStyle(DEFAULT, TEXT_SIZE, static_cast<int>(get_font_size()));
 
 	if(const Rectangle rect{.x = x, .y = y, .width = width, .height = height}; GuiButton(rect, text_.c_str())) {
-		if(const auto err = play_click_sfx().unwrap(); err) {
-			return error("failed to play click sfx", *err);
-		}
-		get_app().post_event(click{.id = get_id()});
+		return do_click();
 	}
 
+	return true;
+}
+
+auto button::do_click() -> result<> {
+	if(const auto err = play_click_sfx().unwrap(); err) {
+		return error("failed to play click sfx", *err);
+	}
+	get_app().post_event(click{.id = get_id()});
 	return true;
 }
 
