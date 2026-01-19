@@ -105,7 +105,7 @@ public:
 	[[nodiscard]] auto draw_sprite(const std::string &sprite_sheet,
 								   const std::string &frame,
 								   const Vector2 &position,
-								   const float &scale,
+								   const float &scale = 1.0F,
 								   const Color &tint = WHITE) -> result<>;
 
 	[[nodiscard]] auto get_sprite_size(const std::string &sprite_sheet, const std::string &frame) const -> result<size>;
@@ -404,10 +404,11 @@ private:
 	int color_bleed_ = 1;
 
 	bool in_controller_mode_ = false;
-	float mouse_inactive_time_ = 0.0f;
-	static constexpr float controller_mode_grace_period_ = 2.0f;
-	auto update_controller_mode(float delta_time) -> void;
+	float mouse_inactive_time_ = 0.0F;
+	static constexpr float controller_mode_grace_period = 2.0F;
 
+	auto update_controller_mode(float delta_time) -> void;
+	static auto is_gamepad_input_detected() -> bool;
 };
 
 } // namespace pxe

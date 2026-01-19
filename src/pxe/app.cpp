@@ -15,6 +15,7 @@
 #include <raylib.h>
 
 #include <cstdio>
+#include <cstdlib>
 #include <format>
 #include <fstream>
 #include <jsoncons/basic_json.hpp>
@@ -88,6 +89,7 @@ auto app::init() -> result<> {
 	InitWindow(1920, 1080, title_.c_str());
 	SetExitKey(KEY_NULL);
 	SetTargetFPS(60);
+
 
 #ifdef PLATFORM_DESKTOP
 	const auto icon = LoadImage("resources/icon/icon.png");
@@ -196,6 +198,12 @@ auto app::run() -> result<> {
 	if(const auto err = init_scenes().unwrap(); err) {
 		return error("error init scenes", *err);
 	}
+
+	// do an empty frame to force raylib to initialize controller
+	BeginDrawing();
+	ClearBackground(clear_color_);
+	EndDrawing();
+	in_controller_mode_ = IsGamepadAvailable(0);
 
 #ifdef __EMSCRIPTEN__
 	emscripten_set_main_loop_arg(
@@ -512,7 +520,7 @@ auto app::unload_sfx(const std::string &name) -> result<> {
 
 auto app::play_music(const std::string &path, const float volume /* - 1.0F*/) -> result<> {
 	if(current_music_path_ == path && music_playing_) {
-		SPDLOG_TRACE("already playing music {}", path);
+		SPDLOG_DEBUG("already playing music {}", path);
 		return true;
 	}
 
@@ -578,7 +586,7 @@ auto app::toggle_fullscreen() -> bool {
 
 auto app::play_sfx(const std::string &name, const float volume /*= 1.0F*/) -> result<> {
 	if(sfx_muted_) {
-		SPDLOG_TRACE("sfx is muted, not playing sfx {}", name);
+		SPDLOG_DEBUG("sfx is muted, not playing sfx {}", name);
 		return true;
 	}
 
@@ -928,7 +936,7 @@ auto app::main_loop() -> result<> {
 	if(in_controller_mode_) {
 		HideCursor();
 		GuiLock();
-	}else {
+	} else {
 		GuiUnlock();
 		ShowCursor();
 	}
@@ -944,23 +952,57 @@ auto app::main_loop() -> result<> {
 auto app::update_controller_mode(float delta_time) -> void {
 	if(!IsGamepadAvailable(0)) {
 		in_controller_mode_ = false;
-		mouse_inactive_time_ = 0.0f;
+		mouse_inactive_time_ = 0.0F;
 		return;
 	}
 
+	// Check for gamepad input - switch to controller mode immediately
+	if(is_gamepad_input_detected()) {
+		in_controller_mode_ = true;
+		mouse_inactive_time_ = 0.0F;
+		return;
+	}
+
+	// Check for mouse/keyboard activity
 	constexpr auto delta_threshold = 2.0F;
 	const auto [mouse_delta_x, mouse_delta_y] = GetMouseDelta();
-	bool mouse_active = (mouse_delta_x > delta_threshold) || (mouse_delta_y > delta_threshold) ||
-						IsMouseButtonDown(0) || IsMouseButtonDown(1) || IsMouseButtonDown(2);
+	bool const mouse_active = (std::abs(mouse_delta_x) > delta_threshold) || (std::abs(mouse_delta_y) > delta_threshold)
+							  || IsMouseButtonDown(0) || IsMouseButtonDown(1) || IsMouseButtonDown(2)
+							  || GetKeyPressed() != 0;
 
 	if(mouse_active) {
-		mouse_inactive_time_ = 0.0f;
 		in_controller_mode_ = false;
+		mouse_inactive_time_ = 0.0F;
 	} else {
+		// No input detected - apply grace period before switching to controller mode
 		mouse_inactive_time_ += delta_time;
-		in_controller_mode_ = (mouse_inactive_time_ > controller_mode_grace_period_);
+		if(!in_controller_mode_ && mouse_inactive_time_ > controller_mode_grace_period) {
+			in_controller_mode_ = true;
+		}
 	}
 }
 
+auto app::is_gamepad_input_detected() -> bool {
+	if(!IsGamepadAvailable(0)) {
+		return false;
+	}
+
+	// Check buttons
+	for(int button = 0; button <= GAMEPAD_BUTTON_RIGHT_THUMB; button++) {
+		if(IsGamepadButtonPressed(0, button)) {
+			return true;
+		}
+	}
+
+	// Check axes (with dead zone)
+	constexpr float axis_threshold = 0.3F;
+	for(int axis = 0; axis <= GAMEPAD_AXIS_RIGHT_Y; axis++) {
+		if(std::abs(GetGamepadAxisMovement(0, axis)) > axis_threshold) {
+			return true;
+		}
+	}
+
+	return false;
+}
 
 } // namespace pxe

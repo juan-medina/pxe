@@ -60,7 +60,7 @@ auto license::init(app &app) -> result<> {
 	button_ptr->set_text(GuiIconText(ICON_OK_TICK, "Accept"));
 	button_ptr->set_position({.x = 0, .y = 0});
 	button_ptr->set_size({.width = 60, .height = 30});
-	button_ptr->set_game_pad_button(GAMEPAD_BUTTON_RIGHT_FACE_DOWN);
+	button_ptr->set_controller_button(GAMEPAD_BUTTON_RIGHT_FACE_DOWN);
 
 	button_click_ = app.bind_event<button::click>(this, &license::on_button_click);
 

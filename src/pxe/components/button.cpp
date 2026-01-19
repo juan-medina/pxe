@@ -9,6 +9,7 @@
 
 #include <raylib.h>
 
+#include <format>
 #include <optional>
 #include <raygui.h>
 
@@ -71,7 +72,41 @@ auto button::draw() -> result<> {
 		return do_click();
 	}
 
+	if(get_app().is_in_controller_mode() && is_enabled()) {
+		if(!button_sprite_.empty()) {
+			auto pos = get_position();
+			const auto size = get_size();
+			switch(controller_button_pos_) {
+			case controller_button_position::bottom_left: {
+				pos.y += size.height;
+				break;
+			}
+			case controller_button_position::bottom_right:
+				pos.x += size.width;
+				pos.y += size.height;
+				break;
+			case controller_button_position::top_left:
+				break;
+			case controller_button_position::top_right:
+				pos.x += size.width;
+				break;
+			}
+			if(const auto err = get_app().draw_sprite(buttons_sprite_list, button_sprite_, pos).unwrap(); err) {
+				return error("failed to draw button sprite", *err);
+			}
+		}
+	}
+
 	return true;
+}
+
+auto button::set_controller_button(const int button) -> void {
+	game_pad_button_ = button;
+	if(button != -1) {
+		button_sprite_ = std::format("button_{:02}.png", button);
+	} else {
+		button_sprite_.clear();
+	}
 }
 
 auto button::do_click() -> result<> {
