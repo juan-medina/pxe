@@ -37,7 +37,7 @@ auto button::update(const float delta) -> result<> {
 	}
 
 	if(is_enabled()) {
-		if(game_pad_button_ != -1 && IsGamepadButtonPressed(0, game_pad_button_)) {
+		if(game_pad_button_ != -1 && get_app().is_controller_button_pressed(game_pad_button_)) {
 			if(get_app().is_in_controller_mode()) {
 				return do_click();
 			}

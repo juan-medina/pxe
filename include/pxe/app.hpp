@@ -201,6 +201,8 @@ public:
 
 	struct back_to_menu {};
 
+	[[nodiscard]] auto is_controller_button_pressed(int button) const -> bool;
+
 protected:
 	[[nodiscard]] virtual auto init() -> result<>;
 	[[nodiscard]] virtual auto init_scenes() -> result<>;
@@ -401,7 +403,7 @@ private:
 	static constexpr float controller_mode_grace_period = 2.0F;
 
 	auto update_controller_mode(float delta_time) -> void;
-	static auto is_gamepad_input_detected() -> bool;
+	auto is_gamepad_input_detected() const -> bool;
 	static auto is_mouse_keyboard_active() -> bool;
 
 	// Main Loop
@@ -416,6 +418,11 @@ private:
 	// Utility
 	[[nodiscard]] static auto parse_version(const std::string &path) -> result<version>;
 	static auto open_url(const std::string &url) -> result<>;
+	int default_controller_ = 0;
+
+#ifdef __EMSCRIPTEN__
+	std::unordered_set<std::string> validated_controllers_;
+#endif
 };
 
 } // namespace pxe

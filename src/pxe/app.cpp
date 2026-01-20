@@ -52,6 +52,10 @@ static const auto color_line_format = "[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v %@";
 // Lifecycle - Initialization
 // =============================================================================
 
+auto app::is_controller_button_pressed(const int button) const -> bool {
+	return IsGamepadButtonPressed(default_controller_, button);
+}
+
 auto app::init() -> result<> {
 	if(const auto err = parse_version(version_file_path).unwrap(version_); err) {
 		return error("error parsing the version", *err);
@@ -147,7 +151,7 @@ auto app::run() -> result<> {
 	BeginDrawing();
 	ClearBackground(clear_color_);
 	EndDrawing();
-	in_controller_mode_ = IsGamepadAvailable(0);
+	update_controller_mode(0.0F);
 
 #ifdef __EMSCRIPTEN__
 	emscripten_set_main_loop_arg(
@@ -1034,10 +1038,61 @@ auto app::configure_gui_for_input_mode() const -> void {
 	}
 }
 
-auto app::update_controller_mode(float delta_time) -> void {
-	if(!IsGamepadAvailable(0)) {
+auto app::update_controller_mode(const float delta_time) -> void {
+	// check all possible gamepads
+	const auto was_no_controller = default_controller_ == -1;
+	default_controller_ = -1;
+
+	for(int i = 0; i < 4; ++i) {
+		if(!IsGamepadAvailable(i)) {
+			continue;
+		}
+
+#ifdef __EMSCRIPTEN__
+		const char* name = GetGamepadName(i);
+		if(name != nullptr) {
+			std::string name_str(name);
+
+			// Check if already validated
+			bool is_validated = validated_controllers_.contains(name_str);
+
+			if(!is_validated) {
+				// Check if any button is pressed to validate this controller
+				bool button_pressed = false;
+				for(int button = 0; button <= GAMEPAD_BUTTON_RIGHT_THUMB && !button_pressed; button++) {
+					if(IsGamepadButtonPressed(i, button)) {
+						button_pressed = true;
+					}
+				}
+
+				if(button_pressed) {
+					validated_controllers_.insert(name_str);
+					is_validated = true;
+					SPDLOG_DEBUG("validated controller: {}", name_str);
+				}
+			}
+
+			if(!is_validated) {
+				continue; // Skip unvalidated controllers
+			}
+		}
+#endif
+
+		default_controller_ = i;
+		break;
+	}
+
+	if(default_controller_ != -1 && was_no_controller) {
+		SPDLOG_INFO("using controller: {}", GetGamepadName(default_controller_));
+		SPDLOG_INFO("controller has {} axis", GetGamepadAxisCount(default_controller_));
+	}
+
+	if(default_controller_ == -1 || !IsGamepadAvailable(default_controller_)) {
 		in_controller_mode_ = false;
 		mouse_inactive_time_ = 0.0F;
+		if(!was_no_controller) {
+			SPDLOG_INFO("controller disconnected");
+		}
 		return;
 	}
 
@@ -1059,20 +1114,20 @@ auto app::update_controller_mode(float delta_time) -> void {
 	}
 }
 
-auto app::is_gamepad_input_detected() -> bool {
-	if(!IsGamepadAvailable(0)) {
+auto app::is_gamepad_input_detected() const -> bool {
+	if(!IsGamepadAvailable(default_controller_)) {
 		return false;
 	}
 
 	for(int button = 0; button <= GAMEPAD_BUTTON_RIGHT_THUMB; button++) {
-		if(IsGamepadButtonPressed(0, button)) {
+		if(IsGamepadButtonPressed(default_controller_, button)) {
 			return true;
 		}
 	}
 
 	constexpr float axis_threshold = 0.3F;
 	for(int axis = 0; axis <= GAMEPAD_AXIS_RIGHT_Y; axis++) {
-		if(std::abs(GetGamepadAxisMovement(0, axis)) > axis_threshold) {
+		if(std::abs(GetGamepadAxisMovement(default_controller_, axis)) > axis_threshold) {
 			return true;
 		}
 	}
