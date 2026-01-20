@@ -121,7 +121,7 @@ auto button::draw() -> result<> {
 auto button::set_controller_button(const int button) -> void {
 	game_pad_button_ = button;
 	if(button != -1) {
-		button_sprite_ = std::format("button_{:02}.png", button);
+		button_sprite_ = get_controller_button_name(button);
 	} else {
 		button_sprite_.clear();
 	}

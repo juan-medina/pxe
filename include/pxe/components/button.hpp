@@ -9,7 +9,7 @@
 #include <pxe/result.hpp>
 
 #include <cstddef>
-#include <cstdint>
+#include <format>
 #include <string>
 
 namespace pxe {
@@ -53,12 +53,20 @@ public:
 		horizontal_alignment_ = horizontal;
 	}
 
+	static auto get_controller_button_name(const int button) -> std::string {
+		return std::format("button_{:02}.png", button);
+	}
+
+	static auto constexpr controller_sprite_list() -> const char * {
+		return "menu";
+	}
+
 private:
 	std::string text_{"Button"};
 	int game_pad_button_{-1};
 	[[nodiscard]] auto do_click() -> result<>;
 	static constexpr auto buttons_sprite_list = "menu";
-	std::string button_sprite_{"button_06.png"};
+	std::string button_sprite_;
 	vertical_alignment vertical_alignment_{vertical_alignment::bottom};
 	horizontal_alignment horizontal_alignment_{horizontal_alignment::right};
 };
