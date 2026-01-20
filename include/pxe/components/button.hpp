@@ -4,6 +4,7 @@
 #pragma once
 
 #include <pxe/app.hpp>
+#include <pxe/components/component.hpp>
 #include <pxe/components/ui_component.hpp>
 #include <pxe/result.hpp>
 
@@ -45,21 +46,11 @@ public:
 		size_t id{};
 	};
 
-	enum class controller_button_position : std::uint8_t {
-		bottom_left,
-		bottom_right,
-		bottom_center,
-		top_left,
-		top_right,
-		top_center,
-		left_middle,
-		right_middle,
-		center,
-	};
-
 	auto set_controller_button(int button) -> void;
-	auto set_controller_button_position(controller_button_position pos) -> void {
-		controller_button_pos_ = pos;
+	auto set_controller_button_alignment(const vertical_alignment vertical, const horizontal_alignment horizontal)
+		-> void {
+		vertical_alignment_ = vertical;
+		horizontal_alignment_ = horizontal;
 	}
 
 private:
@@ -68,7 +59,8 @@ private:
 	[[nodiscard]] auto do_click() -> result<>;
 	static constexpr auto buttons_sprite_list = "menu";
 	std::string button_sprite_{"button_06.png"};
-	controller_button_position controller_button_pos_{controller_button_position::top_right};
+	vertical_alignment vertical_alignment_{vertical_alignment::bottom};
+	horizontal_alignment horizontal_alignment_{horizontal_alignment::right};
 };
 
 } // namespace pxe

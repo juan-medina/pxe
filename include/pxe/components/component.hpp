@@ -9,6 +9,7 @@
 
 #include <cassert>
 #include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <optional>
 
@@ -109,4 +110,17 @@ private:
 	size_t id_{0};
 	static size_t next_id;
 };
+
+enum class vertical_alignment : std::uint8_t {
+	top,
+	center,
+	bottom,
+};
+
+enum class horizontal_alignment : std::uint8_t {
+	left,
+	center,
+	right,
+};
+
 } // namespace pxe
