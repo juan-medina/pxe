@@ -27,6 +27,7 @@ public:
 	auto operator=(ui_component &&) noexcept -> ui_component & = default;
 
 	[[nodiscard]] auto init(app &app) -> result<> override;
+	[[nodiscard]] auto update(float delta) -> result<> override;
 
 	auto set_font(const Font &font) -> void {
 		font_ = font;
@@ -50,7 +51,16 @@ public:
 
 	[[nodiscard]] auto play_click_sfx() -> result<>;
 
+	auto set_focussed(const bool focussed) -> void {
+		focussed_ = focussed;
+	}
+
+	[[nodiscard]] auto is_focussed() const -> bool {
+		return focussed_;
+	}
+
 private:
+	bool focussed_ = false;
 	Font font_{};
 	float font_size_ = 20.0F;
 	std::string click_sfx_{"click"};

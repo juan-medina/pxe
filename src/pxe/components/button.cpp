@@ -68,7 +68,17 @@ auto button::draw() -> result<> {
 	GuiSetFont(get_font());
 	GuiSetStyle(DEFAULT, TEXT_SIZE, static_cast<int>(get_font_size()));
 
-	if(const Rectangle rect{.x = x, .y = y, .width = width, .height = height}; GuiButton(rect, text_.c_str())) {
+	if(is_focussed()) {
+		GuiSetState(STATE_FOCUSED);
+	}
+
+	const auto clicked = GuiButton({.x = x, .y = y, .width = width, .height = height}, text_.c_str());
+
+	if(is_focussed()) {
+		GuiSetState(STATE_NORMAL);
+	}
+
+	if(clicked != 0) {
 		return do_click();
 	}
 

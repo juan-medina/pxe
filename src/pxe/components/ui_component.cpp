@@ -21,6 +21,22 @@ auto ui_component::init(app &app) -> result<> {
 	return true;
 }
 
+auto ui_component::update(const float delta) -> result<> {
+	if(const auto err = component::update(delta).unwrap(); err) {
+		return error("failed to update base component", *err);
+	}
+
+	if(!is_visible()) {
+		return true;
+	}
+
+	if(!get_app().is_in_controller_mode()) {
+		focussed_ = false;
+	}
+
+	return true;
+}
+
 auto ui_component::play_click_sfx() -> result<> {
 	return get_app().play_sfx(click_sfx_);
 }
