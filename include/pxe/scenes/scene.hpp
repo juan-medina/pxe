@@ -123,7 +123,7 @@ public:
 
 	template<typename T>
 		requires std::is_base_of_v<component, T>
-	[[nodiscard]] auto get_component(const size_t id) -> result<std::shared_ptr<T>> {
+	[[nodiscard]] auto get_component(const size_t id) const -> result<std::shared_ptr<T>> {
 		const auto it = find_component(id);
 		if(it == children_.end()) {
 			return error(std::format("no component found with id: {}", id));
@@ -147,7 +147,7 @@ private:
 
 	std::vector<paused_component> paused_components_;
 
-	[[nodiscard]] auto find_component(const size_t id) -> std::vector<child>::iterator {
+	[[nodiscard]] auto find_component(const size_t id) const -> std::vector<child>::const_iterator {
 		return std::ranges::find_if(children_, [id](const child &c) -> bool { return c.comp->get_id() == id; });
 	}
 
