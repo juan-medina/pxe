@@ -58,7 +58,7 @@ public:
 		size_ = size;
 	}
 
-	[[nodiscard]] auto get_size() const -> const size & {
+	[[nodiscard]] virtual auto get_size() const -> const size & {
 		return size_;
 	}
 

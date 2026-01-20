@@ -22,6 +22,7 @@ public:
 	[[nodiscard]] auto end() -> result<> override;
 	[[nodiscard]] auto draw() -> result<> override;
 	[[nodiscard]] auto layout(size screen_size) -> result<> override;
+	[[nodiscard]] auto update(float delta) -> result<> override;
 
 	struct options_closed {};
 
@@ -49,13 +50,13 @@ private:
 
 	int slider_change_{0};
 	auto on_slider_change(const audio_slider::audio_slider_changed &change) -> result<>;
-	auto set_slider_values(size_t slider, float value, bool muted) -> result<>;
+	auto set_slider_values(size_t slider, float value, bool muted) const -> result<>;
 
 	size_t crt_cb_{0};
 	size_t scan_lines_cb_{0};
 	size_t color_bleed_cb_{0};
 
-	auto set_checkbox_value(size_t cb, bool value) -> result<>;
+	auto set_checkbox_value(size_t cb, bool value) const -> result<>;
 
 	int checkbox_changed_{0};
 	auto on_checkbox_changed(const checkbox::checkbox_changed &change) -> result<>;

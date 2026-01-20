@@ -176,6 +176,20 @@ auto options::layout(const size screen_size) -> result<> {
 	return scene::layout(screen_size);
 }
 
+auto options::update(const float delta) -> result<> {
+	if(const auto err = scene::update(delta).unwrap(); err) {
+		return error("failed to update options scene", *err);
+	}
+	if(!is_enabled() || !is_visible()) {
+		return true;
+	}
+	if(auto &app = get_app();
+	   app.is_in_controller_mode() && app.is_controller_button_pressed(GAMEPAD_BUTTON_MIDDLE_RIGHT)) {
+		app.post_event(options_closed{});
+	}
+	return true;
+}
+
 auto options::show() -> result<> {
 	const auto music_volume = get_app().get_music_volume();
 	const auto music_muted = get_app().is_music_muted();
@@ -225,7 +239,7 @@ auto options::on_slider_change(const audio_slider::audio_slider_changed &change)
 	return true;
 }
 
-auto options::set_slider_values(const size_t slider, const float value, const bool muted) -> result<> {
+auto options::set_slider_values(const size_t slider, const float value, const bool muted) const -> result<> {
 	std::shared_ptr<audio_slider> music_slider_component;
 	if(const auto err = get_component<audio_slider>(slider).unwrap(music_slider_component); err) {
 		return error("failed to get music slider component", *err);
@@ -237,7 +251,7 @@ auto options::set_slider_values(const size_t slider, const float value, const bo
 	return true;
 }
 
-auto options::set_checkbox_value(const size_t cb, const bool value) -> result<> {
+auto options::set_checkbox_value(const size_t cb, const bool value) const -> result<> {
 	std::shared_ptr<checkbox> checkbox_component;
 	if(const auto err = get_component<checkbox>(cb).unwrap(checkbox_component); err) {
 		return error("failed to get checkbox component", *err);

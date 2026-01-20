@@ -29,23 +29,17 @@ public:
 
 private:
 	size_t version_display_ = 0;
-	size_t quick_bar_ = 0;
+	size_t options_button_ = 0;
 
 	static constexpr auto margin = 15.0F;
 	static constexpr auto bar_gap = 15.0F;
 	static constexpr auto sprite_sheet = "sprites";
+	static constexpr auto sprite_frame = "gear.png";
 	static constexpr auto normal = Color{.r = 0xFF, .g = 0xFF, .b = 0xFF, .a = 0x7F};
 	static constexpr auto hover = Color{.r = 0xFF, .g = 0xFF, .b = 0xFF, .a = 0xC0};
 	static constexpr auto gap = 5.0F;
 
-	size_t close_button_ = 0;
-	size_t toggle_fullscreen_button_ = 0;
-	size_t options_button_ = 0;
-
 	int button_click_{0};
-
-	static constexpr auto fullscreen_frame = "larger.png";
-	static constexpr auto windowed_frame = "smaller.png";
 
 	auto on_button_click(const button::click &evt) -> result<>;
 };
