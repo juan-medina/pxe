@@ -3,8 +3,11 @@
 
 #pragma once
 
+#include <pxe/components/button.hpp>
 #include <pxe/components/ui_component.hpp>
 #include <pxe/result.hpp>
+
+#include <raylib.h>
 
 #include <cstddef>
 #include <string>
@@ -15,8 +18,8 @@ class app;
 class audio_slider: public ui_component {
 public:
 	[[nodiscard]] auto init(app &app) -> result<> override;
-
 	[[nodiscard]] auto draw() -> result<> override;
+	[[nodiscard]] auto update(float delta) -> result<> override;
 
 	auto set_label(const std::string &label) -> void {
 		label_ = label;
@@ -59,7 +62,18 @@ private:
 	float gap_slider_check_{0.0F};
 	float line_height_{0.0F};
 
+	float acceleration_timer_{0.0F};
+	static constexpr float min_speed = 25.0F;
+	static constexpr float max_speed = 200.0F;
+	static constexpr float acceleration_time = 1.0F;
+
+	static auto constexpr controller_button = GAMEPAD_BUTTON_RIGHT_FACE_LEFT;
+	static auto constexpr button_sheet = button::controller_sprite_list();
+	std::string button_frame_;
+
 	auto calculate_size() -> void;
+
+	[[nodiscard]] auto send_event() -> result<>;
 };
 
 } // namespace pxe

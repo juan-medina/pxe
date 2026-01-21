@@ -3,6 +3,8 @@
 
 #include "pxe/app.hpp"
 #include <pxe/components/audio_slider.hpp>
+#include <pxe/components/button.hpp>
+#include <pxe/components/component.hpp>
 #include <pxe/components/ui_component.hpp>
 #include <pxe/result.hpp>
 
@@ -19,6 +21,8 @@ auto audio_slider::init(app &app) -> result<> {
 	if(const auto err = ui_component::init(app).unwrap(); err) {
 		return error("failed to initialize base ui component", *err);
 	}
+
+	button_frame_ = button::get_controller_button_name(controller_button);
 
 	calculate_size();
 	return true;
@@ -61,6 +65,11 @@ auto audio_slider::draw() -> result<> {
 			GuiDisable();
 		}
 	}
+
+	if(is_focussed()) {
+		GuiSetState(STATE_FOCUSED);
+	}
+
 	GuiSlider({.x = x, .y = y, .width = static_cast<float>(slider_width_), .height = line_height_},
 			  "",
 			  value_str.c_str(),
@@ -81,10 +90,61 @@ auto audio_slider::draw() -> result<> {
 	current_ = static_cast<size_t>(internal_current_);
 
 	if(current_muted != muted_ || current_value != current_) {
-		if(const auto err = play_click_sfx().unwrap(); err) {
-			return error("failed to play click sfx", *err);
+		if(const auto err = send_event().unwrap(); err) {
+			return error("failed to send audio slider event", *err);
 		}
-		get_app().post_event(audio_slider_changed{.id = get_id(), .value = current_, .muted = muted_});
+	}
+
+	if(is_focussed()) {
+		GuiSetState(STATE_NORMAL);
+
+		const auto [cx, cy] = get_position();
+		const auto [cw, ch] = get_size();
+		if(const auto err =
+			   get_app().draw_sprite(button_sheet, button_frame_, {.x = cx + cw + 10, .y = y + (ch / 2)}).unwrap();
+		   err) {
+			return error("failed to draw controller button sprite", *err);
+		}
+	}
+
+	return true;
+}
+
+auto audio_slider::update(float delta) -> result<> {
+	if(const auto err = ui_component::update(delta).unwrap(); err) {
+		return error("failed to update base ui component", *err);
+	}
+
+	if(is_focussed()) {
+		const auto &app = get_app();
+		const bool moving_left = app.is_direction_down(direction::left);
+		const bool moving_right = app.is_direction_down(direction::right);
+
+		if(moving_left || moving_right) {
+			acceleration_timer_ += delta;
+			const float acceleration_factor = std::min(acceleration_timer_ / acceleration_time, 1.0F);
+			const float current_speed = min_speed + ((max_speed - min_speed) * acceleration_factor);
+			const float amount = delta * current_speed;
+
+			if(moving_left) {
+				internal_current_ -= amount;
+				internal_current_ = std::max(internal_current_, internal_min_);
+			} else {
+				internal_current_ += amount;
+				internal_current_ = std::min(internal_current_, internal_max_);
+			}
+		} else {
+			acceleration_timer_ = 0.0F;
+		}
+
+		if(app.is_controller_button_pressed(controller_button)) {
+			muted_ = !muted_;
+			if(const auto err = send_event().unwrap(); err) {
+				return error("failed to send audio slider event", *err);
+			}
+		}
+	} else {
+		acceleration_timer_ = 0.0F;
 	}
 
 	return true;
@@ -104,6 +164,14 @@ auto audio_slider::calculate_size() -> void {
 	total_width += line_height_ + check_gap;
 
 	set_size({.width = total_width, .height = line_height_});
+}
+
+auto audio_slider::send_event() -> result<> {
+	if(const auto err = play_click_sfx().unwrap(); err) {
+		return error("failed to play click sfx", *err);
+	}
+	get_app().post_event(audio_slider_changed{.id = get_id(), .value = current_, .muted = muted_});
+	return true;
 }
 
 } // namespace pxe

@@ -5,6 +5,7 @@
 #include <pxe/components/button.hpp>
 #include <pxe/components/checkbox.hpp>
 #include <pxe/components/component.hpp>
+#include <pxe/components/ui_component.hpp>
 #include <pxe/components/window.hpp>
 #include <pxe/result.hpp>
 #include <pxe/scenes/options.hpp>
@@ -13,6 +14,7 @@
 #include <raylib.h>
 
 #include <cstddef>
+#include <cstdlib>
 #include <memory>
 #include <raygui.h>
 
@@ -118,6 +120,12 @@ auto options::init(app &app) -> result<> {
 
 	checkbox_changed_ = app.bind_event<checkbox::checkbox_changed>(this, &options::on_checkbox_changed);
 	button_click_ = app.bind_event<button::click>(this, &options::on_button_click);
+
+	ui_components_.push_back(music_slider_);
+	ui_components_.push_back(sfx_slider_);
+	ui_components_.push_back(crt_cb_);
+	ui_components_.push_back(scan_lines_cb_);
+	ui_components_.push_back(color_bleed_cb_);
 
 	return true;
 }
@@ -242,6 +250,27 @@ auto options::update(const float delta) -> result<> {
 		return true;
 	}
 
+	const auto &app = get_app();
+	if(app.is_in_controller_mode()) {
+		size_t focus = 0;
+		if(const auto err = get_focus().unwrap(focus); err) {
+			return error("failed to get focused component", *err);
+		}
+		if(focus == 0) {
+			if(const auto err = set_focus(music_slider_).unwrap(); err) {
+				return error("failed to set focus", *err);
+			}
+			focus = music_slider_;
+		}
+		const auto up = app.is_direction_pressed(direction::up);
+		const auto down = app.is_direction_pressed(direction::down);
+		if(up || down) {
+			if(const auto err = move_focus(focus, up ? direction::up : direction::down).unwrap(); err) {
+				return error("failed to move focus", *err);
+			}
+		}
+	}
+
 	return true;
 }
 
@@ -271,6 +300,18 @@ auto options::show() -> result<> {
 	const auto color_bleed_enabled = get_app().is_color_bleed_enabled();
 	if(const auto err = set_checkbox_value(color_bleed_cb_, color_bleed_enabled).unwrap(); err) {
 		return error("failed to set color bleed checkbox value", *err);
+	}
+
+	if(get_app().is_in_controller_mode()) {
+		size_t focus = 0;
+		if(const auto err = get_focus().unwrap(focus); err) {
+			return error("failed to get focused component", *err);
+		}
+		if(focus == 0) {
+			if(const auto err = set_focus(music_slider_).unwrap(); err) {
+				return error("failed to set focus", *err);
+			}
+		}
 	}
 
 	return scene::show();
@@ -334,6 +375,83 @@ auto options::on_button_click(const button::click &click) -> result<> {
 	} else if(click.id == quit_button_) {
 		get_app().close();
 	}
+	return true;
+}
+
+auto options::get_focus() const -> result<size_t> {
+	for(const auto &component_id: ui_components_) {
+		std::shared_ptr<ui_component> ui_comp;
+		if(const auto err = get_component<ui_component>(component_id).unwrap(ui_comp); err) {
+			return error("failed to get ui component", *err);
+		}
+
+		if(ui_comp->is_focussed()) {
+			return component_id;
+		}
+	}
+
+	return 0;
+}
+
+auto options::set_focus(size_t id) const -> result<> {
+	for(const auto &component_id: ui_components_) {
+		std::shared_ptr<ui_component> ui_comp;
+		if(const auto err = get_component<ui_component>(component_id).unwrap(ui_comp); err) {
+			return error("failed to get ui component", *err);
+		}
+		if(component_id == id) {
+			ui_comp->set_focussed(true);
+		} else {
+			ui_comp->set_focussed(false);
+		}
+	}
+
+	return true;
+}
+
+auto options::move_focus(const size_t focus, const direction dir) -> result<> {
+	std::shared_ptr<ui_component> focused_comp;
+	if(const auto err = get_component<ui_component>(focus).unwrap(focused_comp); err) {
+		return error("failed to get focused ui component", *err);
+	}
+	const auto [fx, fy] = focused_comp->get_position();
+	size_t best_id = 0;
+	float best_distance = -1.0F;
+	for(const auto &component_id: ui_components_) {
+		if(component_id == focus) {
+			continue;
+		}
+
+		std::shared_ptr<ui_component> ui_comp;
+		if(const auto err = get_component<ui_component>(component_id).unwrap(ui_comp); err) {
+			return error("failed to get ui component", *err);
+		}
+		const auto [ux, uy] = ui_comp->get_position();
+
+		const auto vertical_distance = uy - fy;
+		if((dir == direction::up) && (vertical_distance >= 0)) {
+			continue;
+		}
+		if((dir == direction::down) && (vertical_distance <= 0)) {
+			continue;
+		}
+
+		const auto distance = std::abs(vertical_distance);
+		if((best_distance < 0) || (distance < best_distance)) {
+			best_distance = distance;
+			best_id = component_id;
+		}
+	}
+
+	if(best_id != 0) {
+		if(const auto err = set_focus(best_id).unwrap(); err) {
+			return error("failed to set focus to new component", *err);
+		}
+		if(const auto err = get_app().play_sfx(click_sound).unwrap(); err) {
+			return error("failed to play click sound", *err);
+		}
+	}
+
 	return true;
 }
 

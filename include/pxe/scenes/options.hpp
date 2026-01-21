@@ -14,6 +14,7 @@
 #include <raylib.h>
 
 #include <cstddef>
+#include <vector>
 
 namespace pxe {
 
@@ -67,6 +68,14 @@ private:
 
 	size_t back_button_{0};
 	size_t quit_button_{0};
+
+	std::vector<size_t> ui_components_;
+
+	[[nodiscard]] auto get_focus() const -> result<size_t>;
+	[[nodiscard]] auto set_focus(size_t id) const -> result<>;
+	[[nodiscard]] auto move_focus(size_t focus, direction dir) -> result<>;
+
+	static constexpr auto click_sound = "click";
 };
 
 } // namespace pxe

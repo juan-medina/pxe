@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <pxe/components/button.hpp>
 #include <pxe/components/ui_component.hpp>
 #include <pxe/result.hpp>
 
@@ -10,10 +11,13 @@
 #include <string>
 
 namespace pxe {
+class app;
 
 class checkbox: public ui_component {
 public:
+	[[nodiscard]] auto init(app &app) -> result<> override;
 	[[nodiscard]] auto draw() -> result<> override;
+	[[nodiscard]] auto update(float delta) -> result<> override;
 
 	auto set_title(const std::string &title) -> void;
 
@@ -38,6 +42,12 @@ private:
 	std::string title_;
 	bool checked_{false};
 	float check_box_size_{0.0F};
+
+	static auto constexpr controller_button = GAMEPAD_BUTTON_RIGHT_FACE_DOWN;
+	static auto constexpr button_sheet = button::controller_sprite_list();
+	std::string button_frame_;
+
+	[[nodiscard]] auto send_event() -> result<>;
 };
 
 } // namespace pxe
