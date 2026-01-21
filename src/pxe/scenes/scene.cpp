@@ -35,11 +35,12 @@ auto scene::draw() -> result<> {
 	return component::draw();
 }
 auto scene::pause() -> result<> {
+	set_enabled(false);
 	paused_components_.clear();
 	for(auto &[comp, layer]: children_) {
 		const auto id = comp->get_id();
 		const auto was_enabled = comp->is_enabled();
-		auto pause_result = paused_component{id, was_enabled};
+		auto pause_result = paused_component{.id = id, .enabled = was_enabled};
 		paused_components_.emplace_back(pause_result);
 		comp->set_enabled(false);
 	}
@@ -47,6 +48,7 @@ auto scene::pause() -> result<> {
 }
 
 auto scene::resume() -> result<> {
+	set_enabled(true);
 	for(const auto &paused_comp: paused_components_) {
 		std::shared_ptr<component> comp;
 		if(const auto err = get_component<component>(paused_comp.id).unwrap(comp); err) {
