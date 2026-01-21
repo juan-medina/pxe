@@ -65,7 +65,7 @@ auto sprite_button::draw() -> result<> {
 	}
 	sprite_.set_scale(normal_scale);
 
-	if(get_app().is_in_controller_mode()) {
+	if(get_app().is_in_controller_mode() && is_enabled()) {
 		if(!controller_button_frame_.empty()) {
 			const auto button_pos = get_controller_button_position();
 			if(const auto err =

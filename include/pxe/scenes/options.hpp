@@ -29,6 +29,7 @@ public:
 	[[nodiscard]] auto show() -> result<> override;
 
 private:
+	static constexpr auto click_sound = "click";
 	static auto constexpr window_width = 300;
 	static auto constexpr window_height = 130;
 	static auto constexpr audio_label_width = 40;

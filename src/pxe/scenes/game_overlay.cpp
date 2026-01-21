@@ -40,6 +40,7 @@ auto game_overlay::init(app &app) -> result<> {
 	}
 
 	options_button_ptr->set_controller_button(GAMEPAD_BUTTON_MIDDLE_RIGHT);
+	options_button_ptr->set_controller_button_alignment(vertical_alignment::bottom, horizontal_alignment::center);
 
 	// all buttons clicks
 	button_click_ = app.bind_event<button::click>(this, &game_overlay::on_button_click);

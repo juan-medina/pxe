@@ -33,7 +33,7 @@ private:
 
 	static constexpr auto margin = 15.0F;
 	static constexpr auto bar_gap = 15.0F;
-	static constexpr auto sprite_sheet = "sprites";
+	static constexpr auto sprite_sheet = "menu";
 	static constexpr auto sprite_frame = "gear.png";
 	static constexpr auto normal = Color{.r = 0xFF, .g = 0xFF, .b = 0xFF, .a = 0x7F};
 	static constexpr auto hover = Color{.r = 0xFF, .g = 0xFF, .b = 0xFF, .a = 0xC0};

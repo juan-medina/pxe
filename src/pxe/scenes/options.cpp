@@ -185,6 +185,9 @@ auto options::update(const float delta) -> result<> {
 	}
 	if(auto &app = get_app();
 	   app.is_in_controller_mode() && app.is_controller_button_pressed(GAMEPAD_BUTTON_MIDDLE_RIGHT)) {
+		if(const auto err = app.play_sfx(click_sound).unwrap(); err) {
+			return error("failed to play click sound", *err);
+		}
 		app.post_event(options_closed{});
 	}
 	return true;
