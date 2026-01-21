@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 #include <pxe/components/audio_slider.hpp>
+#include <pxe/components/button.hpp>
 #include <pxe/components/checkbox.hpp>
 #include <pxe/components/component.hpp>
 #include <pxe/components/window.hpp>
@@ -88,7 +89,35 @@ auto options::init(app &app) -> result<> {
 	}
 	checkbox_component->set_title("Enable Color Bleed");
 
+	if(const auto err = register_component<button>().unwrap(back_button_); err) {
+		return error("failed to register back button component", *err);
+	}
+
+	std::shared_ptr<button> back_button_ptr;
+	if(const auto err = get_component<button>(back_button_).unwrap(back_button_ptr); err) {
+		return error("failed to get back button component", *err);
+	}
+	back_button_ptr->set_text(GuiIconText(ICON_PLAYER_PREVIOUS, "Back"));
+	back_button_ptr->set_size({.width = 55, .height = 20});
+	back_button_ptr->set_controller_button(GAMEPAD_BUTTON_MIDDLE_RIGHT);
+
+#ifndef __EMSCRIPTEN__
+	if(const auto err = register_component<button>().unwrap(quit_button_); err) {
+		return error("failed to register quit button component", *err);
+	}
+
+	std::shared_ptr<button> quit_button_ptr;
+	if(const auto err = get_component<button>(quit_button_).unwrap(quit_button_ptr); err) {
+		return error("failed to get quit button component", *err);
+	}
+
+	quit_button_ptr->set_text(GuiIconText(ICON_EXIT, "Quit"));
+	quit_button_ptr->set_size({.width = 55, .height = 20});
+	quit_button_ptr->set_controller_button(GAMEPAD_BUTTON_RIGHT_FACE_UP);
+#endif
+
 	checkbox_changed_ = app.bind_event<checkbox::checkbox_changed>(this, &options::on_checkbox_changed);
+	button_click_ = app.bind_event<button::click>(this, &options::on_button_click);
 
 	return true;
 }
@@ -97,6 +126,7 @@ auto options::end() -> result<> {
 	get_app().unsubscribe(close_window_);
 	get_app().unsubscribe(slider_change_);
 	get_app().unsubscribe(checkbox_changed_);
+	get_app().unsubscribe(button_click_);
 
 	return scene::end();
 }
@@ -133,7 +163,7 @@ auto options::layout(const size screen_size) -> result<> {
 	// position the music slider inside the window
 	const auto [slider_width, slider_height] = music_slider_component->get_size();
 
-	const float control_x = (screen_width_ / 2) - (slider_width / 2);
+	float control_x = (screen_width_ / 2) - (slider_width / 2);
 	float control_y = window_y + (slider_height * 4);
 
 	// center slider in the window
@@ -173,6 +203,34 @@ auto options::layout(const size screen_size) -> result<> {
 	control_y += slider_height + control_row_gap;
 	checkbox_component->set_position({.x = control_x, .y = control_y});
 
+	std::shared_ptr<button> back_button_ptr;
+	if(const auto err = get_component<button>(back_button_).unwrap(back_button_ptr); err) {
+		return error("failed to get back button component", *err);
+	}
+
+	control_y += slider_height + control_row_gap;
+	const auto [button_width, button_height] = back_button_ptr->get_size();
+
+	const auto center = (screen_width_ / 2);
+#ifndef __EMSCRIPTEN__
+	control_x = center - button_width - control_row_gap;
+#else
+	control_x = center - button_width / 2;
+#endif
+
+	back_button_ptr->set_position({.x = control_x, .y = control_y});
+
+#ifndef __EMSCRIPTEN__
+	std::shared_ptr<button> quit_button_ptr;
+	if(const auto err = get_component<button>(quit_button_).unwrap(quit_button_ptr); err) {
+		return error("failed to get quit button component", *err);
+	}
+
+	control_x = center + control_row_gap;
+
+	quit_button_ptr->set_position({.x = control_x, .y = control_y});
+#endif
+
 	return scene::layout(screen_size);
 }
 
@@ -183,13 +241,7 @@ auto options::update(const float delta) -> result<> {
 	if(!is_enabled() || !is_visible()) {
 		return true;
 	}
-	if(auto &app = get_app();
-	   app.is_in_controller_mode() && app.is_controller_button_pressed(GAMEPAD_BUTTON_MIDDLE_RIGHT)) {
-		if(const auto err = app.play_sfx(click_sound).unwrap(); err) {
-			return error("failed to play click sound", *err);
-		}
-		app.post_event(options_closed{});
-	}
+
 	return true;
 }
 
@@ -273,6 +325,15 @@ auto options::on_checkbox_changed(const checkbox::checkbox_changed &change) -> r
 		get_app().set_color_bleed_enabled(change.checked);
 	}
 
+	return true;
+}
+
+auto options::on_button_click(const button::click &click) -> result<> {
+	if(click.id == back_button_) {
+		get_app().post_event(options_closed{});
+	} else if(click.id == quit_button_) {
+		get_app().close();
+	}
 	return true;
 }
 

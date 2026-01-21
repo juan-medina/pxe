@@ -5,6 +5,7 @@
 
 #include <pxe/app.hpp>
 #include <pxe/components/audio_slider.hpp>
+#include <pxe/components/button.hpp>
 #include <pxe/components/checkbox.hpp>
 #include <pxe/components/component.hpp>
 #include <pxe/result.hpp>
@@ -29,9 +30,8 @@ public:
 	[[nodiscard]] auto show() -> result<> override;
 
 private:
-	static constexpr auto click_sound = "click";
 	static auto constexpr window_width = 300;
-	static auto constexpr window_height = 130;
+	static auto constexpr window_height = 150;
 	static auto constexpr audio_label_width = 40;
 	static auto constexpr audio_slider_width = 140;
 
@@ -51,16 +51,22 @@ private:
 
 	int slider_change_{0};
 	auto on_slider_change(const audio_slider::audio_slider_changed &change) -> result<>;
-	auto set_slider_values(size_t slider, float value, bool muted) const -> result<>;
+	[[nodiscard]] auto set_slider_values(size_t slider, float value, bool muted) const -> result<>;
 
 	size_t crt_cb_{0};
 	size_t scan_lines_cb_{0};
 	size_t color_bleed_cb_{0};
 
-	auto set_checkbox_value(size_t cb, bool value) const -> result<>;
+	[[nodiscard]] auto set_checkbox_value(size_t cb, bool value) const -> result<>;
 
 	int checkbox_changed_{0};
 	auto on_checkbox_changed(const checkbox::checkbox_changed &change) -> result<>;
+
+	int button_click_{0};
+	auto on_button_click(const button::click &click) -> result<>;
+
+	size_t back_button_{0};
+	size_t quit_button_{0};
 };
 
 } // namespace pxe
