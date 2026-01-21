@@ -25,27 +25,23 @@ auto scroll_text::init(app &app) -> result<> {
 }
 
 auto scroll_text::update(const float delta) -> result<> {
-	// Let base UI component run its update behavior first.
 	if(const auto err = ui_component::update(delta).unwrap(); err) {
 		return error("failed to update base UI component", *err);
 	}
 
 	if(is_visible() && is_enabled()) {
 		if(get_app().is_in_controller_mode()) {
-			// pixels per millisecond
-			constexpr float scroll_speed = 400;
-			if(get_app().is_direction_down(direction::up)) {
-				scroll_.y += scroll_speed * delta;
+			if(const auto any_direction = calculate_acceleration(delta); !any_direction) {
+				calculate_deceleration(delta);
 			}
-			if(get_app().is_direction_down(direction::down)) {
-				scroll_.y -= scroll_speed * delta;
-			}
-			if(get_app().is_direction_down(direction::left)) {
-				scroll_.x += scroll_speed * delta;
-			}
-			if(get_app().is_direction_down(direction::right)) {
-				scroll_.x -= scroll_speed * delta;
-			}
+
+			// Clamp to max speed
+			velocity_.y = std::clamp(velocity_.y, -max_speed_, max_speed_);
+			velocity_.x = std::clamp(velocity_.x, -max_speed_, max_speed_);
+
+			// Apply velocity to scroll position
+			scroll_.y += velocity_.y * delta;
+			scroll_.x += velocity_.x * delta;
 		}
 	}
 
@@ -121,6 +117,42 @@ void scroll_text::set_font_size(const float &font_size) {
 	ui_component::set_font_size(font_size);
 	line_spacing_ = font_size * 0.5F;
 	spacing_ = font_size * 0.2F;
+}
+
+auto scroll_text::calculate_acceleration(float delta) -> bool {
+	bool any_direction = false;
+	if(get_app().is_direction_down(direction::up)) {
+		velocity_.y += acceleration_ * delta;
+		any_direction = true;
+	}
+	if(get_app().is_direction_down(direction::down)) {
+		velocity_.y -= acceleration_ * delta;
+		any_direction = true;
+	}
+	if(get_app().is_direction_down(direction::left)) {
+		velocity_.x += acceleration_ * delta;
+		any_direction = true;
+	}
+	if(get_app().is_direction_down(direction::right)) {
+		velocity_.x -= acceleration_ * delta;
+		any_direction = true;
+	}
+
+	return any_direction;
+}
+
+auto scroll_text::calculate_deceleration(float delta) -> void {
+	const float decel = deceleration_ * delta;
+	if(velocity_.y > 0) {
+		velocity_.y = std::max(0.0F, velocity_.y - decel);
+	} else if(velocity_.y < 0) {
+		velocity_.y = std::min(0.0F, velocity_.y + decel);
+	}
+	if(velocity_.x > 0) {
+		velocity_.x = std::max(0.0F, velocity_.x - decel);
+	} else if(velocity_.x < 0) {
+		velocity_.x = std::min(0.0F, velocity_.x + decel);
+	}
 }
 
 } // namespace pxe

@@ -50,6 +50,14 @@ private:
 
 	float line_spacing_ = 0.0F;
 	float spacing_ = 0.0F;
+
+	Vector2 velocity_ = {.x = 0.0F, .y = 0.0F};
+	float acceleration_ = 1000.0F; // pixels per second²
+	float max_speed_ = 600.0F;	   // pixels per second
+	float deceleration_ = 2000.0F; // pixels per second²
+
+	auto calculate_acceleration(float delta) -> bool;
+	auto calculate_deceleration(float delta) -> void;
 };
 
 } // namespace pxe
