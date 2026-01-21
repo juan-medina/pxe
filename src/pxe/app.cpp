@@ -101,6 +101,52 @@ auto app::is_direction_pressed(const direction check) const -> bool {
 	return pressed;
 }
 
+auto app::is_controller_button_down(const int button) const -> bool {
+	return IsGamepadButtonDown(default_controller_, button);
+}
+
+auto app::is_direction_down(const direction check) const -> bool {
+	auto down = false;
+	switch(check) {
+	case direction::left:
+		down = is_controller_button_down(GAMEPAD_BUTTON_LEFT_FACE_LEFT);
+		break;
+	case direction::right:
+		down = is_controller_button_down(GAMEPAD_BUTTON_LEFT_FACE_RIGHT);
+		break;
+	case direction::up:
+		down = is_controller_button_down(GAMEPAD_BUTTON_LEFT_FACE_UP);
+		break;
+	case direction::down:
+		down = is_controller_button_down(GAMEPAD_BUTTON_LEFT_FACE_DOWN);
+		break;
+	}
+
+	if(!down) {
+		const auto trigger_1_x = GetGamepadAxisMovement(default_controller_, GAMEPAD_AXIS_LEFT_X);
+		const auto trigger_1_y = GetGamepadAxisMovement(default_controller_, GAMEPAD_AXIS_LEFT_Y);
+		const auto trigger_2_x = GetGamepadAxisMovement(default_controller_, GAMEPAD_AXIS_RIGHT_X);
+		const auto trigger_2_y = GetGamepadAxisMovement(default_controller_, GAMEPAD_AXIS_RIGHT_Y);
+
+		switch(check) {
+		case direction::left:
+			down = trigger_1_x < -controller_axis_dead_zone || trigger_2_x < -controller_axis_dead_zone;
+			break;
+		case direction::right:
+			down = trigger_1_x > controller_axis_dead_zone || trigger_2_x > controller_axis_dead_zone;
+			break;
+		case direction::up:
+			down = trigger_1_y < -controller_axis_dead_zone || trigger_2_y < -controller_axis_dead_zone;
+			break;
+		case direction::down:
+			down = trigger_1_y > controller_axis_dead_zone || trigger_2_y > controller_axis_dead_zone;
+			break;
+		}
+	}
+
+	return down;
+}
+
 auto app::init() -> result<> {
 	if(const auto err = parse_version(version_file_path).unwrap(version_); err) {
 		return error("error parsing the version", *err);

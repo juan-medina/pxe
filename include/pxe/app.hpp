@@ -205,6 +205,9 @@ public:
 	[[nodiscard]] auto is_controller_button_pressed(int button) const -> bool;
 	[[nodiscard]] auto is_direction_pressed(direction check) const -> bool;
 
+	[[nodiscard]] auto is_controller_button_down(int button) const -> bool;
+	[[nodiscard]] auto is_direction_down(direction check) const -> bool;
+
 protected:
 	[[nodiscard]] virtual auto init() -> result<>;
 	[[nodiscard]] virtual auto init_scenes() -> result<>;

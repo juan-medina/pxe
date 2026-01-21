@@ -30,6 +30,25 @@ auto scroll_text::update(const float delta) -> result<> {
 		return error("failed to update base UI component", *err);
 	}
 
+	if(is_visible() && is_enabled()) {
+		if(get_app().is_in_controller_mode()) {
+			// pixels per millisecond
+			constexpr float scroll_speed = 400;
+			if(get_app().is_direction_down(direction::up)) {
+				scroll_.y += scroll_speed * delta;
+			}
+			if(get_app().is_direction_down(direction::down)) {
+				scroll_.y -= scroll_speed * delta;
+			}
+			if(get_app().is_direction_down(direction::left)) {
+				scroll_.x += scroll_speed * delta;
+			}
+			if(get_app().is_direction_down(direction::right)) {
+				scroll_.x -= scroll_speed * delta;
+			}
+		}
+	}
+
 	return true;
 }
 
