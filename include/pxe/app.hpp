@@ -201,7 +201,9 @@ public:
 
 	struct back_to_menu {};
 
+	// Input Management
 	[[nodiscard]] auto is_controller_button_pressed(int button) const -> bool;
+	[[nodiscard]] auto is_direction_pressed(direction check) const -> bool;
 
 protected:
 	[[nodiscard]] virtual auto init() -> result<>;
@@ -403,8 +405,17 @@ private:
 	static constexpr float controller_mode_grace_period = 2.0F;
 
 	auto update_controller_mode(float delta_time) -> void;
-	auto is_gamepad_input_detected() const -> bool;
-	static auto is_mouse_keyboard_active() -> bool;
+	[[nodiscard]] auto is_gamepad_input_detected() const -> bool;
+	[[nodiscard]] static auto is_mouse_keyboard_active() -> bool;
+
+
+#ifdef __EMSCRIPTEN__
+	std::unordered_set<std::string> validated_controllers_;
+#endif
+	auto reset_direction_states() -> void;
+
+	static constexpr auto controller_axis_dead_zone = 0.3F;
+	std::unordered_map<direction, bool> direction_was_active_;
 
 	// Main Loop
 	[[nodiscard]] auto main_loop() -> result<>;
@@ -420,9 +431,6 @@ private:
 	static auto open_url(const std::string &url) -> result<>;
 	int default_controller_ = 0;
 
-#ifdef __EMSCRIPTEN__
-	std::unordered_set<std::string> validated_controllers_;
-#endif
 };
 
 } // namespace pxe

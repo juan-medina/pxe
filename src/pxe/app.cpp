@@ -56,6 +56,51 @@ auto app::is_controller_button_pressed(const int button) const -> bool {
 	return IsGamepadButtonPressed(default_controller_, button);
 }
 
+auto app::is_direction_pressed(const direction check) const -> bool {
+	auto pressed = false;
+	switch(check) {
+	case direction::left:
+		pressed = is_controller_button_pressed(GAMEPAD_BUTTON_LEFT_FACE_LEFT);
+		break;
+	case direction::right:
+		pressed = is_controller_button_pressed(GAMEPAD_BUTTON_LEFT_FACE_RIGHT);
+		break;
+	case direction::up:
+		pressed = is_controller_button_pressed(GAMEPAD_BUTTON_LEFT_FACE_UP);
+		break;
+	case direction::down:
+		pressed = is_controller_button_pressed(GAMEPAD_BUTTON_LEFT_FACE_DOWN);
+		break;
+	}
+
+	if(!pressed) {
+		const auto trigger_1_x = GetGamepadAxisMovement(default_controller_, GAMEPAD_AXIS_LEFT_X);
+		const auto trigger_1_y = GetGamepadAxisMovement(default_controller_, GAMEPAD_AXIS_LEFT_Y);
+		const auto trigger_2_x = GetGamepadAxisMovement(default_controller_, GAMEPAD_AXIS_RIGHT_X);
+		const auto trigger_2_y = GetGamepadAxisMovement(default_controller_, GAMEPAD_AXIS_RIGHT_Y);
+
+		bool is_active = false;
+
+		switch(check) {
+		case direction::left:
+			is_active = trigger_1_x < -controller_axis_dead_zone || trigger_2_x < -controller_axis_dead_zone;
+			break;
+		case direction::right:
+			is_active = trigger_1_x > controller_axis_dead_zone || trigger_2_x > controller_axis_dead_zone;
+			break;
+		case direction::up:
+			is_active = trigger_1_y < -controller_axis_dead_zone || trigger_2_y < -controller_axis_dead_zone;
+			break;
+		case direction::down:
+			is_active = trigger_1_y > controller_axis_dead_zone || trigger_2_y > controller_axis_dead_zone;
+			break;
+		}
+		pressed = is_active && !direction_was_active_.at(check);
+	}
+
+	return pressed;
+}
+
 auto app::init() -> result<> {
 	if(const auto err = parse_version(version_file_path).unwrap(version_); err) {
 		return error("error parsing the version", *err);
@@ -152,6 +197,7 @@ auto app::run() -> result<> {
 	ClearBackground(clear_color_);
 	EndDrawing();
 	update_controller_mode(0.0F);
+	reset_direction_states();
 
 #ifdef __EMSCRIPTEN__
 	emscripten_set_main_loop_arg(
@@ -222,6 +268,7 @@ auto app::update() -> result<> {
 
 	update_music_stream();
 	update_controller_mode(delta);
+	reset_direction_states();
 
 	return true;
 }
@@ -1049,7 +1096,7 @@ auto app::update_controller_mode(const float delta_time) -> void {
 		}
 
 #ifdef __EMSCRIPTEN__
-		const char* name = GetGamepadName(i);
+		const char *name = GetGamepadName(i);
 		if(name != nullptr) {
 			std::string name_str(name);
 
@@ -1141,6 +1188,25 @@ auto app::is_mouse_keyboard_active() -> bool {
 
 	return (std::abs(mouse_delta_x) > delta_threshold) || (std::abs(mouse_delta_y) > delta_threshold)
 		   || IsMouseButtonDown(0) || IsMouseButtonDown(1) || IsMouseButtonDown(2) || GetKeyPressed() != 0;
+}
+
+auto app::reset_direction_states() -> void {
+	if(!is_in_controller_mode()) {
+		return;
+	}
+	const auto trigger_1_x = GetGamepadAxisMovement(default_controller_, GAMEPAD_AXIS_LEFT_X);
+	const auto trigger_1_y = GetGamepadAxisMovement(default_controller_, GAMEPAD_AXIS_LEFT_Y);
+	const auto trigger_2_x = GetGamepadAxisMovement(default_controller_, GAMEPAD_AXIS_RIGHT_X);
+	const auto trigger_2_y = GetGamepadAxisMovement(default_controller_, GAMEPAD_AXIS_RIGHT_Y);
+
+	direction_was_active_[direction::left] =
+		trigger_1_x < -controller_axis_dead_zone || trigger_2_x < -controller_axis_dead_zone;
+	direction_was_active_[direction::right] =
+		trigger_1_x > controller_axis_dead_zone || trigger_2_x > controller_axis_dead_zone;
+	direction_was_active_[direction::up] =
+		trigger_1_y < -controller_axis_dead_zone || trigger_2_y < -controller_axis_dead_zone;
+	direction_was_active_[direction::down] =
+		trigger_1_y > controller_axis_dead_zone || trigger_2_y > controller_axis_dead_zone;
 }
 
 // =============================================================================

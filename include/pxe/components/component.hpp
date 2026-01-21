@@ -123,4 +123,6 @@ enum class horizontal_alignment : std::uint8_t {
 	right,
 };
 
+enum class direction : std::uint8_t { left, right, up, down };
+
 } // namespace pxe
