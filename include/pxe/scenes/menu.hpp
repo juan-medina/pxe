@@ -8,6 +8,7 @@
 #include <pxe/components/component.hpp>
 #include <pxe/result.hpp>
 #include <pxe/scenes/scene.hpp>
+
 #include <cstddef>
 
 namespace pxe {
@@ -48,10 +49,17 @@ private:
 
 	size_t play_button_{0};
 	size_t about_button_{0};
+#ifndef __EMSCRIPTEN__
 	size_t quit_button_{0};
+	static constexpr auto play_button_size = 115;
+	static constexpr auto other_buttons_size = 55;
+#else
+	static constexpr auto play_button_size = 80;
+	static constexpr auto other_buttons_size = 80;
+#endif
 	int button_click_{0};
 
 	auto on_button_click(const button::click &evt) -> result<>;
 };
 
-}  // namespace pxe
+} // namespace pxe
