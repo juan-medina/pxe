@@ -99,6 +99,10 @@ auto app::init_scenes() -> result<> {
 }
 
 auto app::end() -> result<> {
+	if(const auto err = persist_settings().unwrap(); err) {
+		return error("failed to save settings on end application", *err);
+	}
+
 	unsubscribe_from_builtin_events();
 
 	if(const auto err = end_all_scenes().unwrap(); err) {
@@ -938,15 +942,15 @@ auto app::configure_crt_shader() const -> void {
 // =============================================================================
 
 auto app::load_settings() -> result<> {
-	music_volume_ = settings_.get("music.volume", 0.5F);
-	music_muted_ = settings_.get("music.muted", false);
-	sfx_volume_ = settings_.get("sfx.volume", 1.0F);
-	sfx_muted_ = settings_.get("sfx.muted", false);
-	crt_enabled_ = settings_.get("video.crt_enabled", true);
-	scan_lines_ = settings_.get("video.scan_lines", 1);
-	color_bleed_ = settings_.get("video.color_bleed", 1);
+	music_volume_ = settings_.get("music.volume", music_volume_);
+	music_muted_ = settings_.get("music.muted", music_muted_);
+	sfx_volume_ = settings_.get("sfx.volume", sfx_volume_);
+	sfx_muted_ = settings_.get("sfx.muted", sfx_muted_);
+	crt_enabled_ = settings_.get("video.crt_enabled", crt_enabled_);
+	scan_lines_ = settings_.get("video.scan_lines", scan_lines_);
+	color_bleed_ = settings_.get("video.color_bleed", color_bleed_);
 #ifndef __EMSCRIPTEN__
-	full_screen_ = settings_.get("video.fullscreen", false);
+	full_screen_ = settings_.get("video.fullscreen", full_screen_);
 #endif
 	return true;
 }

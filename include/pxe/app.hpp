@@ -423,7 +423,11 @@ private:
 	// =============================================================================
 	// Window Management
 	// =============================================================================
+#ifdef WIN32
+	bool full_screen_{true};
+#else
 	bool full_screen_{false};
+#endif
 	bool should_exit_{false};
 
 	[[nodiscard]] auto init_window() const -> result<>;
