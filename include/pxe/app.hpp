@@ -263,7 +263,9 @@ protected:
 	[[nodiscard]] auto unload_sfx(const std::string &name) -> result<>;
 
 private:
+	// =============================================================================
 	// Application Identity
+	// =============================================================================
 	std::string name_;
 	std::string team_;
 	std::string title_{"Engine App"};
@@ -271,17 +273,28 @@ private:
 	version version_{};
 	static constexpr auto version_file_path = "resources/version/version.json";
 
+	[[nodiscard]] static auto parse_version(const std::string &path) -> result<version>;
+	[[nodiscard]] auto setup_log() -> result<>;
+	auto print_banner() const -> void;
+	static void log_callback(int log_level, const char *text, va_list args);
+
+	// =============================================================================
 	// Font Management
+	// =============================================================================
 	Font default_font_{};
 	int default_font_size_{12};
 	bool custom_default_font_{false};
 
 	auto set_default_font(const Font &font, int size, int texture_filter = TEXTURE_FILTER_POINT) -> void;
 
+	// =============================================================================
 	// Event System
+	// =============================================================================
 	event_bus event_bus_;
 
+	// =============================================================================
 	// Scene Management
+	// =============================================================================
 	struct scene_info {
 		scene_id id;
 		std::string name;
@@ -296,6 +309,13 @@ private:
 	scene_id menu_scene_{0};
 	scene_id options_scene_{0};
 
+	int version_click_{0};
+	int options_click_{0};
+	int options_closed_{0};
+	int license_accepted_{0};
+	int go_to_game_{0};
+	int back_to_menu_{0};
+
 	[[nodiscard]] auto find_scene_info(scene_id id) -> result<std::shared_ptr<scene_info>>;
 	auto sort_scenes() -> void;
 	[[nodiscard]] auto init_all_scenes() -> result<>;
@@ -303,6 +323,17 @@ private:
 	[[nodiscard]] auto update_all_scenes(float delta) const -> result<>;
 	[[nodiscard]] auto draw_all_scenes() const -> result<>;
 	[[nodiscard]] auto layout_all_scenes() const -> result<>;
+
+	auto register_builtin_scenes() -> void;
+	auto subscribe_to_builtin_events() -> void;
+	auto unsubscribe_from_builtin_events() -> void;
+
+	[[nodiscard]] auto on_version_click() const -> result<>;
+	[[nodiscard]] auto on_options_click() -> result<>;
+	[[nodiscard]] auto on_options_closed() -> result<>;
+	[[nodiscard]] auto on_license_accepted() -> result<>;
+	[[nodiscard]] auto on_go_to_game() -> result<>;
+	[[nodiscard]] auto on_back_to_menu() -> result<>;
 
 	template<typename T>
 	static auto get_scene_type_name() -> std::string {
@@ -317,26 +348,9 @@ private:
 #endif
 	}
 
-	// Scene Event Handlers
-	int version_click_{0};
-	int options_click_{0};
-	int options_closed_{0};
-	int license_accepted_{0};
-	int go_to_game_{0};
-	int back_to_menu_{0};
-
-	[[nodiscard]] auto on_version_click() const -> result<>;
-	[[nodiscard]] auto on_options_click() -> result<>;
-	[[nodiscard]] auto on_options_closed() -> result<>;
-	[[nodiscard]] auto on_license_accepted() -> result<>;
-	[[nodiscard]] auto on_go_to_game() -> result<>;
-	[[nodiscard]] auto on_back_to_menu() -> result<>;
-
-	auto register_builtin_scenes() -> void;
-	auto subscribe_to_builtin_events() -> void;
-	auto unsubscribe_from_builtin_events() -> void;
-
+	// =============================================================================
 	// Audio System
+	// =============================================================================
 	bool audio_initialized_{false};
 	std::unordered_map<std::string, Sound> sfx_;
 	Music background_music_{};
@@ -347,17 +361,21 @@ private:
 	float sfx_volume_{1.0F};
 	bool sfx_muted_{false};
 
-	auto init_audio() -> result<>;
-	auto end_audio() -> result<>;
+	[[nodiscard]] auto init_audio() -> result<>;
+	[[nodiscard]] auto end_audio() -> result<>;
 	auto update_music_stream() const -> void;
-	auto cleanup_audio_resources() -> result<>;
+	[[nodiscard]] auto cleanup_audio_resources() -> result<>;
 
+	// =============================================================================
 	// Sprite Management
+	// =============================================================================
 	std::unordered_map<std::string, sprite_sheet> sprite_sheets_;
 
 	[[nodiscard]] auto cleanup_sprite_sheets() -> result<>;
 
+	// =============================================================================
 	// Rendering System
+	// =============================================================================
 	Color clear_color_{WHITE};
 	size screen_size_{};
 	size design_resolution_;
@@ -374,7 +392,9 @@ private:
 	[[nodiscard]] auto apply_crt_shader() const -> result<>;
 	[[nodiscard]] auto draw_final_output() const -> result<>;
 
+	// =============================================================================
 	// CRT Effect
+	// =============================================================================
 	texture crt_texture_;
 	static auto constexpr crt_path = "resources/bg/crt.png";
 	Shader crt_shader_{};
@@ -389,51 +409,53 @@ private:
 	[[nodiscard]] auto cleanup_crt_resources() -> result<>;
 	auto configure_crt_shader() const -> void;
 
+	// =============================================================================
 	// Settings
+	// =============================================================================
 	settings settings_;
 
 	[[nodiscard]] auto load_settings() -> result<>;
 	[[nodiscard]] auto persist_settings() -> result<>;
 
+	// =============================================================================
 	// Window Management
+	// =============================================================================
 	bool full_screen_{false};
 	bool should_exit_{false};
 
 	[[nodiscard]] auto init_window() const -> result<>;
 	[[nodiscard]] auto handle_escape_key() -> result<>;
 
+	// =============================================================================
 	// Input Management
+	// =============================================================================
 	bool in_controller_mode_{false};
 	float mouse_inactive_time_{0.0F};
+	int default_controller_{0};
+	std::unordered_map<direction, bool> direction_was_active_;
+
 	static constexpr float controller_mode_grace_period = 2.0F;
-
-	auto update_controller_mode(float delta_time) -> void;
-	[[nodiscard]] auto is_gamepad_input_detected() const -> bool;
-	[[nodiscard]] static auto is_mouse_keyboard_active() -> bool;
-
+	static constexpr auto controller_axis_dead_zone = 0.3F;
 
 #ifdef __EMSCRIPTEN__
 	std::unordered_set<std::string> validated_controllers_;
 #endif
+
+	auto update_controller_mode(float delta_time) -> void;
+	[[nodiscard]] auto is_gamepad_input_detected() const -> bool;
+	[[nodiscard]] static auto is_mouse_keyboard_active() -> bool;
 	auto reset_direction_states() -> void;
 
-	static constexpr auto controller_axis_dead_zone = 0.3F;
-	std::unordered_map<direction, bool> direction_was_active_;
-
+	// =============================================================================
 	// Main Loop
+	// =============================================================================
 	[[nodiscard]] auto main_loop() -> result<>;
 	auto configure_gui_for_input_mode() const -> void;
 
-	// Logging
-	[[nodiscard]] auto setup_log() -> result<>;
-	static void log_callback(int log_level, const char *text, va_list args);
-	auto print_banner() const -> void;
-
+	// =============================================================================
 	// Utility
-	[[nodiscard]] static auto parse_version(const std::string &path) -> result<version>;
-	static auto open_url(const std::string &url) -> result<>;
-	int default_controller_ = 0;
-
+	// =============================================================================
+	[[nodiscard]] static auto open_url(const std::string &url) -> result<>;
 };
 
 } // namespace pxe
