@@ -14,6 +14,7 @@ performance-*,
 readability-*,
 -readability-magic-numbers,
 -*-identifier-length,
+llvm-include-cleaner,
 '
 
 CheckOptions:
@@ -38,3 +39,4 @@ CheckOptions:
   - { key: readability-identifier-naming.TypeCase, value: lower_case }
   - { key: readability-identifier-naming.UnionCase, value: lower_case }
   - { key: readability-identifier-naming.VariableCase, value: lower_case }
+	

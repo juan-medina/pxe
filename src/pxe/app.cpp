@@ -1328,7 +1328,7 @@ void app::log_callback(const int log_level, const char *text, va_list args) {
 	constexpr std::size_t initial_size = 1024;
 	thread_local std::vector<char> buffer(initial_size);
 
-	va_list args_copy{};
+	va_list args_copy{}; // NOLINT(cppcoreguidelines-pro-type-vararg)
 	va_copy(args_copy, args);
 	int const needed = std::vsnprintf(buffer.data(), buffer.size(), text, args_copy);
 	va_end(args_copy);
