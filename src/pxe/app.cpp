@@ -6,6 +6,7 @@
 #include <pxe/events.hpp>
 #include <pxe/render/sprite_sheet.hpp>
 #include <pxe/result.hpp>
+#include <pxe/scenes/about.hpp>
 #include <pxe/scenes/game_overlay.hpp>
 #include <pxe/scenes/license.hpp>
 #include <pxe/scenes/menu.hpp>
@@ -397,6 +398,7 @@ auto app::layout_all_scenes() const -> result<> {
 auto app::register_builtin_scenes() -> void {
 	license_scene_ = register_scene<license>();
 	menu_scene_ = register_scene<menu>(false);
+	about_scene_ = register_scene<about>(false);
 	register_scene<game_overlay>(999);
 	options_scene_ = register_scene<options>(1000, false);
 }
@@ -408,6 +410,8 @@ auto app::subscribe_to_builtin_events() -> void {
 	license_accepted_ = on_event<license::accepted>(this, &app::on_license_accepted);
 	go_to_game_ = on_event<menu::go_to_game>(this, &app::on_go_to_game);
 	back_to_menu_ = on_event<back_to_menu>(this, &app::on_back_to_menu);
+	show_about_ = on_event<menu::show_about>(this, &app::on_show_about);
+	about_back_clicked_ = on_event<about::back_clicked>(this, &app::on_about_back_clicked);
 }
 
 auto app::unsubscribe_from_builtin_events() -> void {
@@ -417,6 +421,8 @@ auto app::unsubscribe_from_builtin_events() -> void {
 	unsubscribe(license_accepted_);
 	unsubscribe(go_to_game_);
 	unsubscribe(back_to_menu_);
+	unsubscribe(show_about_);
+	unsubscribe(about_back_clicked_);
 }
 
 // =============================================================================
@@ -491,6 +497,30 @@ auto app::on_back_to_menu() -> result<> {
 	if(const auto err = show_scene(menu_scene_).unwrap(); err) {
 		return error("fail to enable menu scene", *err);
 	}
+	return true;
+}
+
+auto app::on_show_about() -> result<> {
+	if(const auto err = hide_scene(menu_scene_).unwrap(); err) {
+		return error("fail to hide menu scene", *err);
+	}
+
+	if(const auto err = show_scene(about_scene_).unwrap(); err) {
+		return error("fail to show about scene", *err);
+	}
+
+	return true;
+}
+
+auto app::on_about_back_clicked() -> result<> {
+	if(const auto err = hide_scene(about_scene_).unwrap(); err) {
+		return error("fail to hide about scene", *err);
+	}
+
+	if(const auto err = show_scene(menu_scene_).unwrap(); err) {
+		return error("fail to show menu scene", *err);
+	}
+
 	return true;
 }
 

@@ -33,6 +33,7 @@ public:
 	auto layout(size screen_size) -> result<> override;
 
 	struct go_to_game {};
+	struct show_about {};
 
 	auto show() -> result<> override;
 
@@ -46,9 +47,11 @@ private:
 	static constexpr auto menu_music_path = "resources/music/menu.ogg";
 
 	size_t play_button_{0};
+	size_t about_button_{0};
+	size_t quit_button_{0};
 	int button_click_{0};
 
 	auto on_button_click(const button::click &evt) -> result<>;
 };
 
-} // namespace pxe
+}  // namespace pxe

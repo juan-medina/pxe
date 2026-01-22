@@ -23,6 +23,7 @@ An opinionated 2D game engine built in C++20 using raylib.
 - [Boxer](https://github.com/aaronmjacobs/Boxer) (licensed under MIT)
 - [jsoncons](https://github.com/danielaparker/jsoncons) (licensed under Boost Software License 1.0)
 - [PlatformFolders](https://github.com/sago007/PlatformFolders) (licensed under MIT)
+- CRT Shader based on [Godot CRT Shader](https://perons.itch.io/godot-crt-shader) by perons.
 
 **License**
 

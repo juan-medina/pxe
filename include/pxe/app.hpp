@@ -310,6 +310,7 @@ private:
 	scene_id main_scene_{0};
 	scene_id license_scene_{0};
 	scene_id menu_scene_{0};
+	scene_id about_scene_{0};
 	scene_id options_scene_{0};
 
 	int version_click_{0};
@@ -318,6 +319,8 @@ private:
 	int license_accepted_{0};
 	int go_to_game_{0};
 	int back_to_menu_{0};
+	int show_about_{0};
+	int about_back_clicked_{0};
 
 	[[nodiscard]] auto find_scene_info(scene_id id) -> result<std::shared_ptr<scene_info>>;
 	auto sort_scenes() -> void;
@@ -337,6 +340,8 @@ private:
 	[[nodiscard]] auto on_license_accepted() -> result<>;
 	[[nodiscard]] auto on_go_to_game() -> result<>;
 	[[nodiscard]] auto on_back_to_menu() -> result<>;
+	[[nodiscard]] auto on_show_about() -> result<>;
+	[[nodiscard]] auto on_about_back_clicked() -> result<>;
 
 	template<typename T>
 	static auto get_scene_type_name() -> std::string {
