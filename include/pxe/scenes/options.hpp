@@ -32,7 +32,8 @@ public:
 
 private:
 	static auto constexpr window_width = 300;
-	static auto constexpr window_height = 150;
+	static auto constexpr window_height = 170;
+
 	static auto constexpr audio_label_width = 40;
 	static auto constexpr audio_slider_width = 140;
 
@@ -57,6 +58,7 @@ private:
 	size_t crt_cb_{0};
 	size_t scan_lines_cb_{0};
 	size_t color_bleed_cb_{0};
+	size_t fullscreen_cb_{0};
 
 	[[nodiscard]] auto set_checkbox_value(size_t cb, bool value) const -> result<>;
 

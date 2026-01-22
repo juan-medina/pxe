@@ -156,6 +156,9 @@ public:
 
 	// Display Settings
 	auto toggle_fullscreen() -> bool;
+	auto set_fullscreen(bool fullscreen) -> void;
+
+	[[nodiscard]] auto is_fullscreen() -> bool;
 
 	[[nodiscard]] auto is_crt_enabled() const -> bool {
 		return crt_enabled_;

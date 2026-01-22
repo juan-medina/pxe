@@ -1,4 +1,4 @@
-﻿// SPDX-FileCopyrightText: 2026 Juan Medina
+// SPDX-FileCopyrightText: 2026 Juan Medina
 // SPDX-License-Identifier: MIT
 
 #include <pxe/components/audio_slider.hpp>
@@ -91,6 +91,14 @@ auto options::init(app &app) -> result<> {
 	}
 	checkbox_component->set_title("Enable Color Bleed");
 
+	if(const auto err = register_component<checkbox>().unwrap(fullscreen_cb_); err) {
+		return error("failed to register fullscreen checkbox component", *err);
+	}
+	if(const auto err = get_component<checkbox>(fullscreen_cb_).unwrap(checkbox_component); err) {
+		return error("failed to get fullscreen checkbox component", *err);
+	}
+	checkbox_component->set_title("Fullscreen");
+
 	if(const auto err = register_component<button>().unwrap(back_button_); err) {
 		return error("failed to register back button component", *err);
 	}
@@ -126,6 +134,7 @@ auto options::init(app &app) -> result<> {
 	ui_components_.push_back(crt_cb_);
 	ui_components_.push_back(scan_lines_cb_);
 	ui_components_.push_back(color_bleed_cb_);
+	ui_components_.push_back(fullscreen_cb_);
 
 	return true;
 }
@@ -206,6 +215,13 @@ auto options::layout(const size screen_size) -> result<> {
 
 	if(const auto err = get_component<checkbox>(color_bleed_cb_).unwrap(checkbox_component); err) {
 		return error("failed to get color bleed checkbox component", *err);
+	}
+
+	control_y += slider_height + control_row_gap;
+	checkbox_component->set_position({.x = control_x, .y = control_y});
+
+	if(const auto err = get_component<checkbox>(fullscreen_cb_).unwrap(checkbox_component); err) {
+		return error("failed to get fullscreen checkbox component", *err);
 	}
 
 	control_y += slider_height + control_row_gap;
@@ -302,6 +318,11 @@ auto options::show() -> result<> {
 		return error("failed to set color bleed checkbox value", *err);
 	}
 
+	const auto fullscreen_enabled = get_app().is_fullscreen();
+	if(const auto err = set_checkbox_value(fullscreen_cb_, fullscreen_enabled).unwrap(); err) {
+		return error("failed to set fullscreen checkbox value", *err);
+	}
+
 	if(get_app().is_in_controller_mode()) {
 		size_t focus = 0;
 		if(const auto err = get_focus().unwrap(focus); err) {
@@ -364,6 +385,8 @@ auto options::on_checkbox_changed(const checkbox::checkbox_changed &change) -> r
 		get_app().set_scan_lines_enabled(change.checked);
 	} else if(change.id == color_bleed_cb_) {
 		get_app().set_color_bleed_enabled(change.checked);
+	} else if(change.id == fullscreen_cb_) {
+		get_app().toggle_fullscreen();
 	}
 
 	return true;

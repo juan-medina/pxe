@@ -144,6 +144,10 @@ auto app::run() -> result<> {
 		return error("error init scenes", *err);
 	}
 
+#ifndef __EMSCRIPTEN__
+	set_fullscreen(full_screen_);
+#endif
+
 	BeginDrawing();
 	ClearBackground(clear_color_);
 	EndDrawing();
@@ -941,6 +945,9 @@ auto app::load_settings() -> result<> {
 	crt_enabled_ = settings_.get("video.crt_enabled", true);
 	scan_lines_ = settings_.get("video.scan_lines", 1);
 	color_bleed_ = settings_.get("video.color_bleed", 1);
+#ifndef __EMSCRIPTEN__
+	full_screen_ = settings_.get("video.fullscreen", false);
+#endif
 	return true;
 }
 
@@ -956,6 +963,9 @@ auto app::persist_settings() -> result<> {
 	settings_.set("video.crt_enabled", crt_enabled_);
 	settings_.set("video.scan_lines", scan_lines_);
 	settings_.set("video.color_bleed", color_bleed_);
+#ifndef __EMSCRIPTEN__
+	settings_.set("video.fullscreen", full_screen_);
+#endif
 
 	if(const auto err = settings_.save().unwrap(); err) {
 		return error("error saving settings", *err);
@@ -988,8 +998,27 @@ auto app::init_window() const -> result<> {
 	return true;
 }
 
+auto app::set_fullscreen(const bool fullscreen) -> void {
+	if(const auto current_state = is_fullscreen(); current_state != fullscreen) {
+		// Need to toggle to reach desired state
+		toggle_fullscreen();
+	}
+}
+auto app::is_fullscreen() -> bool {
+#ifdef __EMSCRIPTEN__
+	// On Emscripten, check actual fullscreen state
+	full_screen_ = IsWindowFullscreen();
+#elif defined(__linux__)
+	// On Linux, check maximized state as "fullscreen"
+	full_screen_ = IsWindowMaximized();
+#else
+	// On Windows/Mac, check borderless windowed mode
+	full_screen_ = IsWindowState(FLAG_BORDERLESS_WINDOWED_MODE);
+#endif
+	return full_screen_;
+}
+
 auto app::toggle_fullscreen() -> bool {
-	full_screen_ = !full_screen_;
 #ifdef __EMSCRIPTEN__
 	ToggleFullscreen();
 	full_screen_ = IsWindowFullscreen();
@@ -1002,8 +1031,8 @@ auto app::toggle_fullscreen() -> bool {
 	full_screen_ = IsWindowMaximized();
 #else
 	ToggleBorderlessWindowed();
+	full_screen_ = IsWindowState(FLAG_BORDERLESS_WINDOWED_MODE);
 #endif
-
 	return full_screen_;
 }
 
