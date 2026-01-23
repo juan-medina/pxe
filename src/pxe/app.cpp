@@ -214,6 +214,8 @@ auto app::update() -> result<> {
 
 	const auto delta = GetFrameTime();
 
+	update_scene_transition(delta);
+
 	if(const auto err = update_all_scenes(delta).unwrap(); err) {
 		return error("failed to update scenes", *err);
 	}
@@ -310,14 +312,7 @@ auto app::show_scene(const scene_id id, const bool show) -> result<> {
 }
 
 auto app::replace_scene(const scene_id current_scene, const scene_id new_scene) -> result<> {
-	if(const auto err = hide_scene(current_scene).unwrap(); err) {
-		return error(std::format("failed to hide current scene with id: {}", current_scene), *err);
-	}
-
-	if(const auto err = show_scene(new_scene).unwrap(); err) {
-		return error(std::format("failed to show new scene with id: {}", new_scene), *err);
-	}
-
+	start_scene_transition(current_scene, new_scene);
 	return true;
 }
 
@@ -849,6 +844,10 @@ auto app::render_scenes_to_texture() const -> result<> {
 
 	if(const auto err = draw_all_scenes().unwrap(); err) {
 		return error("failed to draw scenes", *err);
+	}
+
+	if(const auto err = draw_transition_overlay().unwrap(); err) {
+		return error("failed to draw transition overlay", *err);
 	}
 
 	EndTextureMode();
@@ -1457,6 +1456,108 @@ auto app::open_url(const std::string &url) -> result<> {
 
 	return true;
 #endif
+}
+
+// =============================================================================
+// Scene Transition System
+// =============================================================================
+
+auto app::start_scene_transition(const scene_id from_scene, const scene_id to_scene) -> void {
+	transition_.active = true;
+	transition_.stage = transition_stage::fade_out;
+	transition_.timer = 0.0F;
+	transition_.from_scene = from_scene;
+	transition_.to_scene = to_scene;
+
+	SPDLOG_DEBUG("starting scene transition from {} to {}", from_scene, to_scene);
+}
+
+auto app::update_scene_transition(const float delta) -> void {
+	if(!transition_.active) {
+		return;
+	}
+
+	transition_.timer += delta;
+
+	switch(transition_.stage) {
+	case transition_stage::fade_out:
+		if(transition_.timer >= fade_out_duration) {
+			// Fade out complete, hide the from scene and move to wait stage
+			if(const auto err = hide_scene(transition_.from_scene).unwrap(); err) {
+				SPDLOG_ERROR("failed to hide scene {} during transition", transition_.from_scene);
+			}
+			transition_.stage = transition_stage::wait;
+			transition_.timer = 0.0F;
+			SPDLOG_DEBUG("transition: fade out complete, entering wait stage");
+		}
+		break;
+
+	case transition_stage::wait:
+		if(transition_.timer >= wait_duration) {
+			// Wait complete, show the to scene and move to fade in stage
+			if(const auto err = show_scene(transition_.to_scene).unwrap(); err) {
+				SPDLOG_ERROR("failed to show scene {} during transition", transition_.to_scene);
+			}
+			transition_.stage = transition_stage::fade_in;
+			transition_.timer = 0.0F;
+			SPDLOG_DEBUG("transition: wait complete, entering fade in stage");
+		}
+		break;
+
+	case transition_stage::fade_in:
+		if(transition_.timer >= fade_in_duration) {
+			// Fade in complete, transition finished
+			transition_.active = false;
+			transition_.stage = transition_stage::none;
+			SPDLOG_DEBUG("transition: fade in complete, transition finished");
+		}
+		break;
+
+	case transition_stage::none:
+	default:
+		break;
+	}
+}
+
+auto app::draw_transition_overlay() const -> result<> {
+	if(!transition_.active) {
+		return true;
+	}
+
+	auto alpha = 0.0F;
+
+	switch(transition_.stage) {
+	case transition_stage::fade_out: {
+		// Fade from 0.0 to 1.0
+		alpha = std::clamp(transition_.timer / fade_out_duration, 0.0F, 1.0F);
+		break;
+	}
+
+	case transition_stage::wait:
+		// Fully opaque during wait
+		alpha = 1.0F;
+		break;
+
+	case transition_stage::fade_in: {
+		// Fade from 1.0 to 0.0
+		const auto progress = std::clamp(transition_.timer / fade_in_duration, 0.0F, 1.0F);
+		alpha = 1.0F - progress;
+		break;
+	}
+
+	case transition_stage::none:
+	default:
+		break;
+	}
+
+	// Create overlay color using clear_color with calculated alpha
+	const auto overlay = ColorAlpha(clear_color_, alpha);
+
+	// Draw rectangle covering the entire drawing resolution
+	const auto [width, height] = drawing_resolution_;
+	DrawRectangle(0, 0, static_cast<int>(width), static_cast<int>(height), overlay);
+
+	return true;
 }
 
 } // namespace pxe

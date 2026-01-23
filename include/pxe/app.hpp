@@ -15,6 +15,7 @@
 
 #include <algorithm>
 #include <cstdarg>
+#include <cstdint>
 #include <functional>
 #include <memory>
 #include <spdlog/spdlog.h>
@@ -308,6 +309,16 @@ private:
 		int layer{};
 	};
 
+	enum class transition_stage : std::int8_t { none, fade_out, wait, fade_in };
+
+	struct scene_transition {
+		bool active{false};
+		transition_stage stage{transition_stage::none};
+		float timer{0.0F};
+		scene_id from_scene{0};
+		scene_id to_scene{0};
+	};
+
 	std::vector<std::shared_ptr<scene_info>> scenes_;
 	scene_id last_scene_id_{0};
 	scene_id main_scene_{0};
@@ -315,6 +326,11 @@ private:
 	scene_id menu_scene_{0};
 	scene_id about_scene_{0};
 	scene_id options_scene_{0};
+
+	static constexpr float fade_out_duration = 0.3F;
+	static constexpr float wait_duration = 0.1F;
+	static constexpr float fade_in_duration = 0.3F;
+	scene_transition transition_;
 
 	int version_click_{0};
 	int options_click_{0};
@@ -332,6 +348,10 @@ private:
 	[[nodiscard]] auto update_all_scenes(float delta) const -> result<>;
 	[[nodiscard]] auto draw_all_scenes() const -> result<>;
 	[[nodiscard]] auto layout_all_scenes() const -> result<>;
+
+	auto start_scene_transition(scene_id from_scene, scene_id to_scene) -> void;
+	auto update_scene_transition(float delta) -> void;
+	[[nodiscard]] auto draw_transition_overlay() const -> result<>;
 
 	auto register_builtin_scenes() -> void;
 	auto subscribe_to_builtin_events() -> void;
