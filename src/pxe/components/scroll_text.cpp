@@ -13,6 +13,7 @@
 #include <optional>
 #include <raygui.h>
 #include <regex>
+#include <spdlog/spdlog.h>
 #include <sstream>
 #include <string>
 
@@ -32,22 +33,79 @@ auto scroll_text::update(const float delta) -> result<> {
 	}
 
 	if(is_visible() && is_enabled()) {
-		if(get_app().is_in_controller_mode()) {
-			if(const auto any_direction = calculate_acceleration(delta); !any_direction) {
-				calculate_deceleration(delta);
+		reset_hover_states();
+
+		const auto mouse_pos = GetMousePosition();
+		auto *hovered_segment = find_link_at_position(mouse_pos);
+
+		if(const auto err = handle_link_hover(hovered_segment).unwrap(); err) {
+			return error("failed to handle link hover", *err);
+		}
+
+		handle_controller_scroll(delta);
+	}
+
+	return true;
+}
+
+auto scroll_text::reset_hover_states() -> void {
+	for(auto &line: text_lines_) {
+		for(auto &segment: line.segments) {
+			segment.is_hovered = false;
+		}
+	}
+}
+
+auto scroll_text::handle_link_hover(text_segment *hovered_segment) -> result<> {
+	// Handle cursor changes
+	if(hover_link_ && hovered_segment == nullptr) {
+		SetMouseCursor(MOUSE_CURSOR_DEFAULT);
+	}
+
+	hover_link_ = (hovered_segment != nullptr);
+
+	// Mark segment as hovered
+	if(hovered_segment != nullptr) {
+		hovered_segment->is_hovered = true;
+	}
+
+	if(hover_link_) {
+		SetMouseCursor(MOUSE_CURSOR_POINTING_HAND);
+
+		// Handle link clicks
+		if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+			if(const auto err = play_click_sfx().unwrap(); err) {
+				return error("failed to play click sfx", *err);
 			}
-
-			// Clamp to max speed
-			velocity_.y = std::clamp(velocity_.y, -max_speed_, max_speed_);
-			velocity_.x = std::clamp(velocity_.x, -max_speed_, max_speed_);
-
-			// Apply velocity to scroll position
-			scroll_.y += velocity_.y * delta;
-			scroll_.x += velocity_.x * delta;
+			if(hovered_segment != nullptr && hovered_segment->url.has_value()) {
+				const auto &url = hovered_segment->url.value();
+				SPDLOG_DEBUG("Opening link: {}", url);
+				if(const auto err = app::open_url(url).unwrap(); err) {
+					return error(std::format("failed to open url '{}'", url), *err);
+				}
+			}
 		}
 	}
 
 	return true;
+}
+
+auto scroll_text::handle_controller_scroll(float delta) -> void {
+	if(!get_app().is_in_controller_mode()) {
+		return;
+	}
+
+	if(const auto any_direction = calculate_acceleration(delta); !any_direction) {
+		calculate_deceleration(delta);
+	}
+
+	// Clamp to max speed
+	velocity_.y = std::clamp(velocity_.y, -max_speed_, max_speed_);
+	velocity_.x = std::clamp(velocity_.x, -max_speed_, max_speed_);
+
+	// Apply velocity to scroll position
+	scroll_.y += velocity_.y * delta;
+	scroll_.x += velocity_.x * delta;
 }
 
 auto scroll_text::draw() -> result<> {
@@ -93,8 +151,8 @@ auto scroll_text::draw() -> result<> {
 
 		// Draw all segments in this line
 		for(const auto &segment: line.segments) {
-			const Color text_color =
-				segment.url.has_value() ? GetColor(GuiGetStyle(DEFAULT, BORDER_COLOR_FOCUSED)) : BLACK;
+			// Get color for segment (handles normal text, links, and hovered links)
+			const Color text_color = get_segment_color(segment);
 
 			// Calculate absolute position using stored relative position
 			const float seg_x = start_x + segment.x;
@@ -239,6 +297,49 @@ auto scroll_text::calculate_deceleration(float delta) -> void {
 
 auto scroll_text::validate_url(const std::string &url) -> bool {
 	return std::regex_match(url, url_pattern);
+}
+
+auto scroll_text::get_segment_color(const text_segment &segment) -> Color {
+	auto color = TEXT_COLOR_NORMAL;
+	if(segment.url.has_value()) {
+		color = segment.is_hovered ? BORDER_COLOR_FOCUSED : TEXT_COLOR_FOCUSED;
+	}
+	return GetColor(static_cast<unsigned int>(GuiGetStyle(DEFAULT, color)));
+}
+
+auto scroll_text::find_link_at_position(const Vector2 &mouse_pos) -> text_segment * {
+	// Check if mouse is within the view bounds
+	if(!CheckCollisionPointRec(mouse_pos, view_)) {
+		return nullptr;
+	}
+
+	const auto start_y = view_.y + scroll_.y;
+	const auto start_x = view_.x + scroll_.x;
+
+	// Check each line and segment
+	for(auto &line: text_lines_) {
+		const float line_y = start_y + line.y;
+
+		// Skip lines outside visible area
+		if(line_y + line.height < view_.y || line_y > view_.y + view_.height) {
+			continue;
+		}
+
+		for(auto &segment: line.segments) {
+			if(!segment.url.has_value()) {
+				continue;
+			}
+
+			const float seg_x = start_x + segment.x;
+			const Rectangle seg_rect = {.x = seg_x, .y = line_y, .width = segment.width, .height = segment.height};
+
+			if(CheckCollisionPointRec(mouse_pos, seg_rect)) {
+				return &segment;
+			}
+		}
+	}
+
+	return nullptr;
 }
 
 } // namespace pxe

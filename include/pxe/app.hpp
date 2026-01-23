@@ -214,6 +214,9 @@ public:
 	[[nodiscard]] auto is_controller_button_down(int button) const -> bool;
 	[[nodiscard]] auto is_direction_down(direction check) const -> bool;
 
+	// URL Opening
+	[[nodiscard]] static auto open_url(const std::string &url) -> result<>;
+
 protected:
 	[[nodiscard]] virtual auto init() -> result<>;
 	[[nodiscard]] virtual auto init_scenes() -> result<>;
@@ -495,11 +498,6 @@ private:
 	// =============================================================================
 	[[nodiscard]] auto main_loop() -> result<>;
 	auto configure_gui_for_input_mode() const -> void;
-
-	// =============================================================================
-	// Utility
-	// =============================================================================
-	[[nodiscard]] static auto open_url(const std::string &url) -> result<>;
 };
 
 } // namespace pxe

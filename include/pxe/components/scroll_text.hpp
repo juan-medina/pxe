@@ -49,6 +49,7 @@ private:
 		float x = 0.0F; // Relative x position within the line
 		float width = 0.0F;
 		float height = 0.0F;
+		bool is_hovered = false;
 	};
 
 	struct text_line {
@@ -78,9 +79,16 @@ private:
 	float max_speed_ = 600.0F;	   // pixels per second
 	float deceleration_ = 2000.0F; // pixels per second²
 
+	bool hover_link_ = false; // Track if mouse is hovering over a link
+
 	auto calculate_acceleration(float delta) -> bool;
 	auto calculate_deceleration(float delta) -> void;
 	static auto validate_url(const std::string &url) -> bool;
+	auto find_link_at_position(const Vector2 &mouse_pos) -> text_segment*;
+	static auto get_segment_color(const text_segment &segment) -> Color;
+	auto reset_hover_states() -> void;
+	[[nodiscard]] auto handle_link_hover(text_segment *hovered_segment) -> result<>;
+	auto handle_controller_scroll(float delta) -> void;
 };
 
 } // namespace pxe
