@@ -309,6 +309,18 @@ auto app::show_scene(const scene_id id, const bool show) -> result<> {
 	return true;
 }
 
+auto app::replace_scene(const scene_id current_scene, const scene_id new_scene) -> result<> {
+	if(const auto err = hide_scene(current_scene).unwrap(); err) {
+		return error(std::format("failed to hide current scene with id: {}", current_scene), *err);
+	}
+
+	if(const auto err = show_scene(new_scene).unwrap(); err) {
+		return error(std::format("failed to show new scene with id: {}", new_scene), *err);
+	}
+
+	return true;
+}
+
 auto app::reset_scene(const scene_id id) -> result<> {
 	std::shared_ptr<scene_info> info;
 	if(const auto err = find_scene_info(id).unwrap(info); err) {
@@ -409,7 +421,7 @@ auto app::subscribe_to_builtin_events() -> void {
 	options_closed_ = on_event<options::options_closed>(this, &app::on_options_closed);
 	license_accepted_ = on_event<license::accepted>(this, &app::on_license_accepted);
 	go_to_game_ = on_event<menu::go_to_game>(this, &app::on_go_to_game);
-	back_to_menu_ = on_event<back_to_menu>(this, &app::on_back_to_menu);
+	back_to_menu_ = bind_event<back_to_menu_from>(this, &app::on_back_to_menu_from);
 	show_about_ = on_event<menu::show_about>(this, &app::on_show_about);
 	about_back_clicked_ = on_event<about::back_clicked>(this, &app::on_about_back_clicked);
 }
@@ -470,58 +482,23 @@ auto app::on_options_closed() -> result<> {
 }
 
 auto app::on_license_accepted() -> result<> {
-	if(const auto err = hide_scene(license_scene_).unwrap(); err) {
-		return error("fail to disable license scene", *err);
-	}
-
-	if(const auto err = show_scene(menu_scene_).unwrap(); err) {
-		return error("fail to enable menu scene", *err);
-	}
-
-	return true;
+	return replace_scene(license_scene_, menu_scene_);
 }
 
 auto app::on_go_to_game() -> result<> {
-	if(const auto err = hide_scene(menu_scene_).unwrap(); err) {
-		return error("fail to disable menu scene", *err);
-	}
-
-	if(const auto err = show_scene(main_scene_).unwrap(); err) {
-		return error("fail to enable main scene", *err);
-	}
-
-	return true;
+	return replace_scene(menu_scene_, main_scene_);
 }
 
-auto app::on_back_to_menu() -> result<> {
-	if(const auto err = show_scene(menu_scene_).unwrap(); err) {
-		return error("fail to enable menu scene", *err);
-	}
-	return true;
+auto app::on_back_to_menu_from(back_to_menu_from from) -> result<> {
+	return replace_scene(from.id, menu_scene_);
 }
 
 auto app::on_show_about() -> result<> {
-	if(const auto err = hide_scene(menu_scene_).unwrap(); err) {
-		return error("fail to hide menu scene", *err);
-	}
-
-	if(const auto err = show_scene(about_scene_).unwrap(); err) {
-		return error("fail to show about scene", *err);
-	}
-
-	return true;
+	return replace_scene(menu_scene_, about_scene_);
 }
 
 auto app::on_about_back_clicked() -> result<> {
-	if(const auto err = hide_scene(about_scene_).unwrap(); err) {
-		return error("fail to hide about scene", *err);
-	}
-
-	if(const auto err = show_scene(menu_scene_).unwrap(); err) {
-		return error("fail to show menu scene", *err);
-	}
-
-	return true;
+	return replace_scene(about_scene_, menu_scene_);
 }
 
 // =============================================================================

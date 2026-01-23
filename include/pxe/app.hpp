@@ -202,7 +202,9 @@ public:
 		return in_controller_mode_;
 	}
 
-	struct back_to_menu {};
+	struct back_to_menu_from {
+		scene_id id{0};
+	};
 
 	// Input Management
 	[[nodiscard]] auto is_controller_button_pressed(int button) const -> bool;
@@ -249,6 +251,7 @@ protected:
 
 	[[nodiscard]] auto unregister_scene(scene_id id) -> result<>;
 	[[nodiscard]] auto show_scene(scene_id id, bool show = true) -> result<>;
+	[[nodiscard]] auto replace_scene(scene_id current_scene, scene_id new_scene) -> result<>;
 
 	[[nodiscard]] auto hide_scene(const scene_id id, const bool hide = true) -> result<> {
 		return show_scene(id, !hide);
@@ -339,7 +342,7 @@ private:
 	[[nodiscard]] auto on_options_closed() -> result<>;
 	[[nodiscard]] auto on_license_accepted() -> result<>;
 	[[nodiscard]] auto on_go_to_game() -> result<>;
-	[[nodiscard]] auto on_back_to_menu() -> result<>;
+	[[nodiscard]] auto on_back_to_menu_from(back_to_menu_from from) -> result<>;
 	[[nodiscard]] auto on_show_about() -> result<>;
 	[[nodiscard]] auto on_about_back_clicked() -> result<>;
 

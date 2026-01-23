@@ -15,7 +15,7 @@
 #include <spdlog/spdlog.h>
 
 #ifdef _WIN32
-#   include <minwindef.h>
+#	include <minwindef.h>
 #endif
 
 namespace pxe {
@@ -46,20 +46,16 @@ auto run_app() -> int {
 } // namespace pxe
 
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define PXE_MAIN(AppClass)                                     \
- auto main(int, char *[]) -> int {                             \
-  return pxe::run_app<AppClass>();                             \
- }                                                             \
-                                                               \
- IF_WIN32(                                                     \
-  auto WINAPI WinMain(                                         \
-   [[maybe_unused]] HINSTANCE hInstance,                       \
-   [[maybe_unused]] HINSTANCE hPrevInstance,                   \
-   [[maybe_unused]] LPSTR lpCmdLine,                           \
-   [[maybe_unused]] int nCmdShow) -> int {                     \
-   return pxe::run_app<AppClass>();                            \
-  }                                                            \
- )
+#define PXE_MAIN(AppClass) \
+	auto main(int, char *[]) -> int { \
+		return pxe::run_app<AppClass>(); \
+	} \
+\
+	IF_WIN32(auto WINAPI WinMain([[maybe_unused]] HINSTANCE instance, \
+								 [[maybe_unused]] HINSTANCE prev_instance, \
+								 [[maybe_unused]] LPSTR cmd_line, \
+								 [[maybe_unused]] int show) \
+				 ->int { return pxe::run_app<AppClass>(); })
 
 #ifdef _WIN32
 #	define IF_WIN32(...) __VA_ARGS__ // NOLINT(cppcoreguidelines-macro-usage)
