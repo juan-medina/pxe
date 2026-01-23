@@ -43,7 +43,10 @@ auto about::init(app &app) -> result<> {
 		return error("failed to get scroll text component", *err);
 	}
 
-	scroll_text_ptr->set_text(text);
+	if(const auto err = scroll_text_ptr->set_text(text).unwrap(); err) {
+		UnloadFileText(text);
+		return error("failed to set text in scroll text component", *err);
+	}
 	UnloadFileText(text);
 	scroll_text_ptr->set_position({.x = 10, .y = 10});
 	scroll_text_ptr->set_size({.width = 500, .height = 400});

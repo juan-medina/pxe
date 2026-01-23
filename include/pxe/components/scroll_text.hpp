@@ -9,6 +9,8 @@
 
 #include <raylib.h>
 
+#include <optional>
+#include <regex>
 #include <string>
 #include <vector>
 
@@ -32,7 +34,7 @@ public:
 	[[nodiscard]] auto update(float delta) -> result<> override;
 	[[nodiscard]] auto draw() -> result<> override;
 
-	auto set_text(const std::string &text) -> void;
+	[[nodiscard]] auto set_text(const std::string &text) -> result<>;
 
 	auto set_title(const std::string &title) -> void {
 		this->title_ = title;
@@ -41,8 +43,23 @@ public:
 	auto set_font_size(const float &font_size) -> void override;
 
 private:
+	struct text_segment {
+		std::string text;
+		std::optional<std::string> url;
+	};
+
+	struct text_line {
+		std::vector<text_segment> segments;
+	};
+
+	// Regex to match markdown links: [text](url)
+	static inline const std::regex link_pattern{R"(\[([^\]]+)\]\(([^\)]+)\))"};
+	
+	// Regex to validate URLs: must be https, no query params (?), no fragments (#)
+	static inline const std::regex url_pattern{R"(^https://[^?#]+$)"};
+
 	std::string title_;
-	std::vector<std::string> text_lines_;
+	std::vector<text_line> text_lines_;
 
 	Vector2 scroll_ = {.x = 0, .y = 0};
 	Rectangle view_ = {.x = 0, .y = 0, .width = 0, .height = 0};
@@ -58,6 +75,7 @@ private:
 
 	auto calculate_acceleration(float delta) -> bool;
 	auto calculate_deceleration(float delta) -> void;
+	static auto validate_url(const std::string &url) -> bool;
 };
 
 } // namespace pxe

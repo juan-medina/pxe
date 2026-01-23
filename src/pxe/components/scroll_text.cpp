@@ -9,8 +9,10 @@
 #include <raylib.h>
 
 #include <algorithm>
+#include <format>
 #include <optional>
 #include <raygui.h>
+#include <regex>
 #include <sstream>
 #include <string>
 
@@ -81,9 +83,38 @@ auto scroll_text::draw() -> result<> {
 	auto const start_x = view_.x + scroll_.x;
 
 	for(const auto &line: text_lines_) {
-		DrawTextEx(get_font(), line.c_str(), {.x = start_x, .y = start_y}, get_font_size(), spacing_, BLACK);
-		const auto [_, line_y] = MeasureTextEx(get_font(), line.c_str(), get_font_size(), spacing_);
-		start_y += line_y + line_spacing_;
+		auto current_x = start_x;
+		float line_height = 0;
+
+		// Draw all segments in this line
+		for(const auto &segment: line.segments) {
+			const Color text_color =
+				segment.url.has_value() ? GetColor(GuiGetStyle(DEFAULT, BORDER_COLOR_FOCUSED)) : BLACK;
+
+			DrawTextEx(get_font(),
+					   segment.text.c_str(),
+					   {.x = current_x, .y = start_y},
+					   get_font_size(),
+					   spacing_,
+					   text_color);
+			const auto [seg_width, seg_height] =
+				MeasureTextEx(get_font(), segment.text.c_str(), get_font_size(), spacing_);
+
+			// Draw underline for links
+			if(segment.url.has_value()) {
+				float underline_y = start_y + seg_height + 1.0F;
+				DrawLineEx({.x = current_x, .y = underline_y},
+						   {.x = current_x + seg_width, .y = underline_y},
+						   1.0F,
+						   text_color);
+			}
+
+			current_x += seg_width;
+			line_height = std::max(line_height, seg_height);
+		}
+
+		// Move to next line
+		start_y += line_height + line_spacing_;
 	}
 
 	EndScissorMode();
@@ -91,16 +122,60 @@ auto scroll_text::draw() -> result<> {
 	return true;
 }
 
-auto scroll_text::set_text(const std::string &text) -> void {
+auto scroll_text::set_text(const std::string &text) -> result<> {
 	float max_x = 0;
 	float total_height = 0;
 
 	std::istringstream stream(text);
 	std::string line;
 	while(std::getline(stream, line)) {
-		text_lines_.emplace_back(line);
+		text_line new_line;
 
-		const auto [x, y] = MeasureTextEx(get_font(), line.c_str(), get_font_size(), spacing_);
+		// Parse the line and split it into segments
+		std::string remaining = line;
+		std::smatch match;
+
+		while(std::regex_search(remaining, match, link_pattern)) {
+			// Add text before the link as a segment
+			if(match.position() > 0) {
+				std::string before_text = remaining.substr(0, match.position());
+				new_line.segments.push_back({.text = before_text, .url = std::nullopt});
+			}
+
+			// Validate and add the link text with URL stored
+			std::string link_text = match[1].str();
+			std::string link_url = match[2].str();
+
+			if(!validate_url(link_url)) {
+				return error(
+					std::format("Invalid URL '{}': must be https, no query parameters, and well-formed", link_url));
+			}
+
+			new_line.segments.push_back({.text = link_text, .url = link_url});
+
+			// Move to the text after the link
+			remaining = match.suffix().str();
+		}
+
+		// Add any remaining text after the last link
+		if(!remaining.empty()) {
+			new_line.segments.push_back({.text = remaining, .url = std::nullopt});
+		}
+
+		// If no segments were added (empty line), add an empty segment
+		if(new_line.segments.empty()) {
+			new_line.segments.push_back({.text = "", .url = std::nullopt});
+		}
+
+		text_lines_.emplace_back(new_line);
+
+		// Calculate line dimensions by concatenating all segment text
+		std::string full_line;
+		for(const auto &segment: new_line.segments) {
+			full_line += segment.text;
+		}
+
+		const auto [x, y] = MeasureTextEx(get_font(), full_line.c_str(), get_font_size(), spacing_);
 		max_x = std::max(x, max_x);
 		total_height += y + line_spacing_;
 	}
@@ -111,6 +186,8 @@ auto scroll_text::set_text(const std::string &text) -> void {
 	content_.height = total_height;
 	scroll_ = {.x = 0, .y = 0};
 	view_ = {.x = 0, .y = 0, .width = 0, .height = 0};
+
+	return true;
 }
 
 void scroll_text::set_font_size(const float &font_size) {
@@ -153,6 +230,10 @@ auto scroll_text::calculate_deceleration(float delta) -> void {
 	} else if(velocity_.x < 0) {
 		velocity_.x = std::min(0.0F, velocity_.x + decel);
 	}
+}
+
+auto scroll_text::validate_url(const std::string &url) -> bool {
+	return std::regex_match(url, url_pattern);
 }
 
 } // namespace pxe
