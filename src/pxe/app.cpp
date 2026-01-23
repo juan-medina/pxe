@@ -1043,21 +1043,21 @@ auto app::set_fullscreen(const bool fullscreen) -> void {
 	}
 }
 auto app::is_fullscreen() -> bool {
-#ifdef __EMSCRIPTEN__
-	// On Emscripten, check actual fullscreen state
+#if defined(__EMSCRIPTEN__) || defined(__APPLE__)
+	// On Emscripten and macOS, check native fullscreen state
 	full_screen_ = IsWindowFullscreen();
 #elif defined(__linux__)
 	// On Linux, check maximized state as "fullscreen"
 	full_screen_ = IsWindowMaximized();
 #else
-	// On Windows/Mac, check borderless windowed mode
+	// On Windows, check borderless windowed mode
 	full_screen_ = IsWindowState(FLAG_BORDERLESS_WINDOWED_MODE);
 #endif
 	return full_screen_;
 }
 
 auto app::toggle_fullscreen() -> bool {
-#ifdef __EMSCRIPTEN__
+#if defined(__EMSCRIPTEN__) || defined(__APPLE__)
 	ToggleFullscreen();
 	full_screen_ = IsWindowFullscreen();
 #elif defined(__linux__)
