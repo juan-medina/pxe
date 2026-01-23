@@ -252,6 +252,8 @@ protected:
 
 	[[nodiscard]] auto unregister_scene(scene_id id) -> result<>;
 	[[nodiscard]] auto show_scene(scene_id id, bool show = true) -> result<>;
+	[[nodiscard]] auto pause_scene(scene_id id) -> result<>;
+	[[nodiscard]] auto resume_scene(scene_id id) -> result<>;
 	[[nodiscard]] auto replace_scene(scene_id current_scene, scene_id new_scene) -> result<>;
 
 	[[nodiscard]] auto hide_scene(const scene_id id, const bool hide = true) -> result<> {

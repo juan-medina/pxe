@@ -311,6 +311,34 @@ auto app::show_scene(const scene_id id, const bool show) -> result<> {
 	return true;
 }
 
+auto app::pause_scene(const scene_id id) -> result<> {
+	std::shared_ptr<scene_info> info;
+	if(const auto err = find_scene_info(id).unwrap(info); err) {
+		return error(std::format("scene with id {} not found", id));
+	}
+
+	if(const auto pause_err = info->scene_ptr->pause().unwrap(); pause_err) {
+		return error(std::format("failed to pause scene with id: {} name: {}", id, info->name), *pause_err);
+	}
+	SPDLOG_DEBUG("paused scene with id: {} name: {}", id, info->name);
+
+	return true;
+}
+
+auto app::resume_scene(const scene_id id) -> result<> {
+	std::shared_ptr<scene_info> info;
+	if(const auto err = find_scene_info(id).unwrap(info); err) {
+		return error(std::format("scene with id {} not found", id));
+	}
+
+	if(const auto resume_err = info->scene_ptr->resume().unwrap(); resume_err) {
+		return error(std::format("failed to resume scene with id: {} name: {}", id, info->name), *resume_err);
+	}
+	SPDLOG_DEBUG("resumed scene with id: {} name: {}", id, info->name);
+
+	return true;
+}
+
 auto app::replace_scene(const scene_id current_scene, const scene_id new_scene) -> result<> {
 	start_scene_transition(current_scene, new_scene);
 	return true;
@@ -1469,6 +1497,17 @@ auto app::start_scene_transition(const scene_id from_scene, const scene_id to_sc
 	transition_.from_scene = from_scene;
 	transition_.to_scene = to_scene;
 
+	// Pause scenes to prevent input during transition
+	// For reset transitions (from == to), only pause once
+	if(const auto err = pause_scene(from_scene).unwrap(); err) {
+		SPDLOG_ERROR("failed to pause from_scene {} during transition start", from_scene);
+	}
+	if(from_scene != to_scene) {
+		if(const auto err = pause_scene(to_scene).unwrap(); err) {
+			SPDLOG_ERROR("failed to pause to_scene {} during transition start", to_scene);
+		}
+	}
+
 	SPDLOG_DEBUG("starting scene transition from {} to {}", from_scene, to_scene);
 }
 
@@ -1528,7 +1567,12 @@ auto app::handle_wait_stage(const bool is_reset) -> void {
 		return;
 	}
 
-	// Wait complete, either reset scene or show new scene
+	// Wait complete, resume scene(s) then either reset or show
+	// Always resume from_scene
+	if(const auto err = resume_scene(transition_.from_scene).unwrap(); err) {
+		SPDLOG_ERROR("failed to resume from_scene {} before transition action", transition_.from_scene);
+	}
+
 	if(is_reset) {
 		// Scene reset: reset the same scene
 		if(const auto err = reload_scene(transition_.from_scene).unwrap(); err) {
@@ -1536,7 +1580,10 @@ auto app::handle_wait_stage(const bool is_reset) -> void {
 		}
 		SPDLOG_DEBUG("transition: wait complete, scene reset, entering fade in stage");
 	} else {
-		// Scene change: show the new scene
+		// Scene change: resume to_scene then show it
+		if(const auto err = resume_scene(transition_.to_scene).unwrap(); err) {
+			SPDLOG_ERROR("failed to resume to_scene {} before transition action", transition_.to_scene);
+		}
 		if(const auto err = show_scene(transition_.to_scene).unwrap(); err) {
 			SPDLOG_ERROR("failed to show scene {} during transition", transition_.to_scene);
 		}
