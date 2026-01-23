@@ -316,7 +316,7 @@ auto app::replace_scene(const scene_id current_scene, const scene_id new_scene) 
 	return true;
 }
 
-auto app::reset_scene(const scene_id id) -> result<> {
+auto app::reload_scene(const scene_id id) -> result<> {
 	std::shared_ptr<scene_info> info;
 	if(const auto err = find_scene_info(id).unwrap(info); err) {
 		return error(std::format("scene with id {} not found", id));
@@ -1479,44 +1479,83 @@ auto app::update_scene_transition(const float delta) -> void {
 
 	transition_.timer += delta;
 
+	const auto is_reset = transition_.from_scene == transition_.to_scene;
+
 	switch(transition_.stage) {
 	case transition_stage::fade_out:
-		if(transition_.timer >= fade_out_duration) {
-			// Fade out complete, hide the from scene and move to wait stage
-			if(const auto err = hide_scene(transition_.from_scene).unwrap(); err) {
-				SPDLOG_ERROR("failed to hide scene {} during transition", transition_.from_scene);
-			}
-			transition_.stage = transition_stage::wait;
-			transition_.timer = 0.0F;
-			SPDLOG_DEBUG("transition: fade out complete, entering wait stage");
-		}
+		handle_fade_out_stage(is_reset);
 		break;
 
 	case transition_stage::wait:
-		if(transition_.timer >= wait_duration) {
-			// Wait complete, show the to scene and move to fade in stage
-			if(const auto err = show_scene(transition_.to_scene).unwrap(); err) {
-				SPDLOG_ERROR("failed to show scene {} during transition", transition_.to_scene);
-			}
-			transition_.stage = transition_stage::fade_in;
-			transition_.timer = 0.0F;
-			SPDLOG_DEBUG("transition: wait complete, entering fade in stage");
-		}
+		handle_wait_stage(is_reset);
 		break;
 
 	case transition_stage::fade_in:
-		if(transition_.timer >= fade_in_duration) {
-			// Fade in complete, transition finished
-			transition_.active = false;
-			transition_.stage = transition_stage::none;
-			SPDLOG_DEBUG("transition: fade in complete, transition finished");
-		}
+		handle_fade_in_stage();
 		break;
 
 	case transition_stage::none:
 	default:
 		break;
 	}
+}
+
+auto app::handle_fade_out_stage(const bool is_reset) -> void {
+	if(transition_.timer < fade_out_duration) {
+		return;
+	}
+
+	// Fade out complete, check if this is a scene reset or scene change
+	if(!is_reset) {
+		// Scene change: hide the from scene
+		if(const auto err = hide_scene(transition_.from_scene).unwrap(); err) {
+			SPDLOG_ERROR("failed to hide scene {} during transition", transition_.from_scene);
+		}
+	}
+
+	transition_.stage = transition_stage::wait;
+	transition_.timer = 0.0F;
+
+	if(is_reset) {
+		SPDLOG_DEBUG("transition: fade out complete, entering wait stage (scene reset)");
+	} else {
+		SPDLOG_DEBUG("transition: fade out complete, entering wait stage");
+	}
+}
+
+auto app::handle_wait_stage(const bool is_reset) -> void {
+	if(transition_.timer < wait_duration) {
+		return;
+	}
+
+	// Wait complete, either reset scene or show new scene
+	if(is_reset) {
+		// Scene reset: reset the same scene
+		if(const auto err = reload_scene(transition_.from_scene).unwrap(); err) {
+			SPDLOG_ERROR("failed to reset scene {} during transition", transition_.from_scene);
+		}
+		SPDLOG_DEBUG("transition: wait complete, scene reset, entering fade in stage");
+	} else {
+		// Scene change: show the new scene
+		if(const auto err = show_scene(transition_.to_scene).unwrap(); err) {
+			SPDLOG_ERROR("failed to show scene {} during transition", transition_.to_scene);
+		}
+		SPDLOG_DEBUG("transition: wait complete, entering fade in stage");
+	}
+
+	transition_.stage = transition_stage::fade_in;
+	transition_.timer = 0.0F;
+}
+
+auto app::handle_fade_in_stage() -> void {
+	if(transition_.timer < fade_in_duration) {
+		return;
+	}
+
+	// Fade in complete, transition finished
+	transition_.active = false;
+	transition_.stage = transition_stage::none;
+	SPDLOG_DEBUG("transition: fade in complete, transition finished");
 }
 
 auto app::draw_transition_overlay() const -> result<> {

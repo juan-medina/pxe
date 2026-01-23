@@ -258,7 +258,10 @@ protected:
 		return show_scene(id, !hide);
 	}
 
-	[[nodiscard]] auto reset_scene(scene_id id) -> result<>;
+	[[nodiscard]] auto reset(scene_id id) -> result<> {
+		return replace_scene(id, id);
+	}
+
 	auto set_main_scene(const scene_id &scene) -> void {
 		main_scene_ = scene;
 	}
@@ -348,9 +351,13 @@ private:
 	[[nodiscard]] auto update_all_scenes(float delta) const -> result<>;
 	[[nodiscard]] auto draw_all_scenes() const -> result<>;
 	[[nodiscard]] auto layout_all_scenes() const -> result<>;
+	[[nodiscard]] auto reload_scene(scene_id id) -> result<>;
 
 	auto start_scene_transition(scene_id from_scene, scene_id to_scene) -> void;
 	auto update_scene_transition(float delta) -> void;
+	auto handle_fade_out_stage(bool is_reset) -> void;
+	auto handle_wait_stage(bool is_reset) -> void;
+	auto handle_fade_in_stage() -> void;
 	[[nodiscard]] auto draw_transition_overlay() const -> result<>;
 
 	auto register_builtin_scenes() -> void;
