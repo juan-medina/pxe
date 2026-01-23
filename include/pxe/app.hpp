@@ -478,6 +478,7 @@ private:
 	// =============================================================================
 	bool in_controller_mode_{false};
 	float mouse_inactive_time_{0.0F};
+	float controller_inactive_time_{0.0F};
 	int default_controller_{0};
 	std::unordered_map<direction, bool> direction_was_active_;
 

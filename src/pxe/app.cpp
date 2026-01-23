@@ -1259,6 +1259,7 @@ auto app::update_controller_mode(const float delta_time) -> void {
 	if(default_controller_ == -1 || !IsGamepadAvailable(default_controller_)) {
 		in_controller_mode_ = false;
 		mouse_inactive_time_ = 0.0F;
+		controller_inactive_time_ = 0.0F;
 		if(!was_no_controller) {
 			SPDLOG_INFO("controller disconnected");
 		}
@@ -1266,20 +1267,36 @@ auto app::update_controller_mode(const float delta_time) -> void {
 	}
 
 	if(is_gamepad_input_detected()) {
-		in_controller_mode_ = true;
-		mouse_inactive_time_ = 0.0F;
-		return;
+		controller_inactive_time_ = 0.0F;
+		// Only switch to controller mode if grace period expired or already in controller mode
+		if(in_controller_mode_ || mouse_inactive_time_ > controller_mode_grace_period) {
+			in_controller_mode_ = true;
+		}
 	}
 
 	if(is_mouse_keyboard_active()) {
-		in_controller_mode_ = false;
 		mouse_inactive_time_ = 0.0F;
-		return;
+		// Only switch to mouse mode if grace period expired or already in mouse mode
+		if(!in_controller_mode_ || controller_inactive_time_ > controller_mode_grace_period) {
+			in_controller_mode_ = false;
+		}
 	}
 
+	// Update inactive timers
 	mouse_inactive_time_ += delta_time;
-	if(!in_controller_mode_ && mouse_inactive_time_ > controller_mode_grace_period) {
-		in_controller_mode_ = true;
+	controller_inactive_time_ += delta_time;
+
+	// Switch modes after grace period of inactivity from current mode
+	if(in_controller_mode_ && controller_inactive_time_ > controller_mode_grace_period) {
+		// If controller hasn't been used for a while, allow mouse to take over
+		if(mouse_inactive_time_ < controller_inactive_time_) {
+			in_controller_mode_ = false;
+		}
+	} else if(!in_controller_mode_ && mouse_inactive_time_ > controller_mode_grace_period) {
+		// If mouse hasn't been used for a while, allow controller to take over
+		if(controller_inactive_time_ < mouse_inactive_time_) {
+			in_controller_mode_ = true;
+		}
 	}
 }
 
