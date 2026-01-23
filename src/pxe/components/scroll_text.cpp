@@ -83,38 +83,32 @@ auto scroll_text::draw() -> result<> {
 	auto const start_x = view_.x + scroll_.x;
 
 	for(const auto &line: text_lines_) {
-		auto current_x = start_x;
-		float line_height = 0;
+		// Calculate absolute y position for this line
+		const float line_y = start_y + line.y;
+
+		// Skip lines that are outside the visible scroll area (vertically)
+		if(line_y + line.height < view_.y || line_y > view_.y + view_.height) {
+			continue;
+		}
 
 		// Draw all segments in this line
 		for(const auto &segment: line.segments) {
 			const Color text_color =
 				segment.url.has_value() ? GetColor(GuiGetStyle(DEFAULT, BORDER_COLOR_FOCUSED)) : BLACK;
 
-			DrawTextEx(get_font(),
-					   segment.text.c_str(),
-					   {.x = current_x, .y = start_y},
-					   get_font_size(),
-					   spacing_,
-					   text_color);
-			const auto [seg_width, seg_height] =
-				MeasureTextEx(get_font(), segment.text.c_str(), get_font_size(), spacing_);
+			// Calculate absolute position using stored relative position
+			const float seg_x = start_x + segment.x;
+
+			DrawTextEx(
+				get_font(), segment.text.c_str(), {.x = seg_x, .y = line_y}, get_font_size(), spacing_, text_color);
 
 			// Draw underline for links
 			if(segment.url.has_value()) {
-				float underline_y = start_y + seg_height + 1.0F;
-				DrawLineEx({.x = current_x, .y = underline_y},
-						   {.x = current_x + seg_width, .y = underline_y},
-						   1.0F,
-						   text_color);
+				const float underline_y = line_y + segment.height + 1.0F;
+				DrawLineEx(
+					{.x = seg_x, .y = underline_y}, {.x = seg_x + segment.width, .y = underline_y}, 1.0F, text_color);
 			}
-
-			current_x += seg_width;
-			line_height = std::max(line_height, seg_height);
 		}
-
-		// Move to next line
-		start_y += line_height + line_spacing_;
 	}
 
 	EndScissorMode();
@@ -167,17 +161,28 @@ auto scroll_text::set_text(const std::string &text) -> result<> {
 			new_line.segments.push_back({.text = "", .url = std::nullopt});
 		}
 
-		text_lines_.emplace_back(new_line);
-
-		// Calculate line dimensions by concatenating all segment text
-		std::string full_line;
-		for(const auto &segment: new_line.segments) {
-			full_line += segment.text;
+		// Calculate positions and sizes for all segments in this line
+		float current_x = 0.0F;
+		float line_height = 0.0F;
+		for(auto &segment: new_line.segments) {
+			const auto [seg_width, seg_height] =
+				MeasureTextEx(get_font(), segment.text.c_str(), get_font_size(), spacing_);
+			segment.x = current_x;
+			segment.width = seg_width;
+			segment.height = seg_height;
+			current_x += seg_width;
+			line_height = std::max(line_height, seg_height);
 		}
 
-		const auto [x, y] = MeasureTextEx(get_font(), full_line.c_str(), get_font_size(), spacing_);
-		max_x = std::max(x, max_x);
-		total_height += y + line_spacing_;
+		// Store line position and height
+		new_line.y = total_height;
+		new_line.height = line_height;
+
+		text_lines_.emplace_back(new_line);
+
+		// Update content dimensions
+		max_x = std::max(max_x, current_x);
+		total_height += line_height + line_spacing_;
 	}
 
 	content_.x = 0;

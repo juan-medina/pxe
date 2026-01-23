@@ -46,15 +46,20 @@ private:
 	struct text_segment {
 		std::string text;
 		std::optional<std::string> url;
+		float x = 0.0F; // Relative x position within the line
+		float width = 0.0F;
+		float height = 0.0F;
 	};
 
 	struct text_line {
 		std::vector<text_segment> segments;
+		float y = 0.0F; // Relative y position from content start
+		float height = 0.0F;
 	};
 
 	// Regex to match markdown links: [text](url)
 	static inline const std::regex link_pattern{R"(\[([^\]]+)\]\(([^\)]+)\))"};
-	
+
 	// Regex to validate URLs: must be https, no query params (?), no fragments (#)
 	static inline const std::regex url_pattern{R"(^https://[^?#]+$)"};
 
