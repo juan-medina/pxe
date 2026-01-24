@@ -334,6 +334,7 @@ private:
 	scene_id menu_scene_{0};
 	scene_id about_scene_{0};
 	scene_id options_scene_{0};
+	scene_id banner_scene_{0};
 
 	static constexpr float fade_out_duration = 0.3F;
 	static constexpr float wait_duration = 0.1F;
@@ -348,6 +349,7 @@ private:
 	int back_to_menu_{0};
 	int show_about_{0};
 	int about_back_clicked_{0};
+	int banner_finished_{0};
 
 	[[nodiscard]] auto find_scene_info(scene_id id) -> result<std::shared_ptr<scene_info>>;
 	auto sort_scenes() -> void;
@@ -377,6 +379,7 @@ private:
 	[[nodiscard]] auto on_back_to_menu_from(back_to_menu_from from) -> result<>;
 	[[nodiscard]] auto on_show_about() -> result<>;
 	[[nodiscard]] auto on_about_back_clicked() -> result<>;
+	[[nodiscard]] auto on_banner_finished() -> result<>;
 
 	template<typename T>
 	static auto get_scene_type_name() -> std::string {

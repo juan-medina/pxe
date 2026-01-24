@@ -4,9 +4,9 @@
 #include <pxe/app.hpp>
 #include <pxe/components/component.hpp>
 #include <pxe/events.hpp>
-#include <pxe/render/sprite_sheet.hpp>
 #include <pxe/result.hpp>
 #include <pxe/scenes/about.hpp>
+#include <pxe/scenes/banner.hpp>
 #include <pxe/scenes/game_overlay.hpp>
 #include <pxe/scenes/license.hpp>
 #include <pxe/scenes/menu.hpp>
@@ -431,9 +431,10 @@ auto app::layout_all_scenes() const -> result<> {
 // =============================================================================
 
 auto app::register_builtin_scenes() -> void {
-	license_scene_ = register_scene<license>();
+	license_scene_ = register_scene<license>(false);
 	menu_scene_ = register_scene<menu>(false);
 	about_scene_ = register_scene<about>(false);
+	banner_scene_ = register_scene<banner>();
 	register_scene<game_overlay>(999);
 	options_scene_ = register_scene<options>(1000, false);
 }
@@ -447,6 +448,7 @@ auto app::subscribe_to_builtin_events() -> void {
 	back_to_menu_ = bind_event<back_to_menu_from>(this, &app::on_back_to_menu_from);
 	show_about_ = on_event<menu::show_about>(this, &app::on_show_about);
 	about_back_clicked_ = on_event<about::back_clicked>(this, &app::on_about_back_clicked);
+	banner_finished_ = on_event <banner::finished>(this, &app::on_banner_finished);
 }
 
 auto app::unsubscribe_from_builtin_events() -> void {
@@ -522,6 +524,10 @@ auto app::on_show_about() -> result<> {
 
 auto app::on_about_back_clicked() -> result<> {
 	return replace_scene(about_scene_, menu_scene_);
+}
+
+auto app::on_banner_finished() -> result<> {
+	return replace_scene(banner_scene_, license_scene_);
 }
 
 // =============================================================================
