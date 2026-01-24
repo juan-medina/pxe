@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <pxe/components/button.hpp>
 #include <pxe/components/component.hpp>
 #include <pxe/components/sprite.hpp>
 #include <pxe/components/ui_component.hpp>
@@ -20,6 +21,9 @@ namespace pxe {
 
 class sprite_button: public ui_component {
 public:
+	[[nodiscard]] auto init(app &app) -> result<> override {
+		return ui_component::init(app);
+	}
 	[[nodiscard]] auto init(app &app,
 							const std::string &sprite_sheet,
 							const std::string &frame,

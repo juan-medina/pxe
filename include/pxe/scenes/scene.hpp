@@ -12,9 +12,7 @@
 #include <functional>
 #include <memory>
 #include <optional>
-#include <ranges>
 #include <spdlog/spdlog.h>
-#include <typeinfo>
 #include <utility>
 #include <vector>
 
@@ -24,43 +22,43 @@ class app;
 
 struct scene_id {
 	constexpr scene_id() noexcept = default;
-	explicit constexpr scene_id(const std::size_t x) noexcept: v(x) {}
+	explicit constexpr scene_id(const std::size_t x) noexcept: v_(x) {}
 
 	constexpr auto operator++() noexcept -> scene_id & {
-		++v;
+		++v_;
 		return *this;
 	}
 	constexpr auto operator++(int) noexcept -> scene_id {
 		const scene_id tmp = *this;
-		++v;
+		++v_;
 		return tmp;
 	}
 
 	[[nodiscard]] constexpr auto value() const noexcept -> std::size_t {
-		return v;
+		return v_;
 	}
 
 	friend constexpr auto operator==(const scene_id &a, const scene_id &b) noexcept -> bool {
-		return a.v == b.v;
+		return a.v_ == b.v_;
 	}
 	friend constexpr auto operator!=(const scene_id &a, const scene_id &b) noexcept -> bool {
-		return a.v != b.v;
+		return a.v_ != b.v_;
 	}
 	friend constexpr auto operator<(const scene_id &a, const scene_id &b) noexcept -> bool {
-		return a.v < b.v;
+		return a.v_ < b.v_;
 	}
 	friend constexpr auto operator<=(const scene_id &a, const scene_id &b) noexcept -> bool {
-		return a.v <= b.v;
+		return a.v_ <= b.v_;
 	}
 	friend constexpr auto operator>(const scene_id &a, const scene_id &b) noexcept -> bool {
-		return a.v > b.v;
+		return a.v_ > b.v_;
 	}
 	friend constexpr auto operator>=(const scene_id &a, const scene_id &b) noexcept -> bool {
-		return a.v >= b.v;
+		return a.v_ >= b.v_;
 	}
 
 private:
-	std::size_t v{0}; // NOLINT(*-non-private-member-variables-in-classes)
+	std::size_t v_{0}; // NOLINT(*-non-private-member-variables-in-classes)
 };
 
 class scene: public component {

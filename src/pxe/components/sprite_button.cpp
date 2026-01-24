@@ -19,7 +19,7 @@ auto sprite_button::init(app &app,
 						 const std::string &frame,
 						 const Color normal_color,
 						 const Color hover_color) -> result<> {
-	if(const auto err = ui_component::init(app).unwrap(); err) {
+	if(const auto err = init(app).unwrap(); err) {
 		return error("failed to initialize base UI component", *err);
 	}
 
