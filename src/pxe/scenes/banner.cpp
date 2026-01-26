@@ -8,6 +8,8 @@
 #include <pxe/scenes/banner.hpp>
 #include <pxe/scenes/scene.hpp>
 
+#include <raylib.h>
+
 #include <memory>
 
 namespace pxe {
@@ -48,9 +50,26 @@ auto banner::update(const float delta) -> result<> {
 		return true;
 	}
 
-	total_time_ += delta;
+	bool skip = false;
+	if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)
+	   || IsMouseButtonPressed(MOUSE_BUTTON_MIDDLE) || IsMouseButtonPressed(MOUSE_BUTTON_SIDE)) {
+		skip = true;
+	}
+	if(IsKeyPressed(KEY_SPACE) || IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_KP_ENTER)) {
+		skip = true;
+	}
+	// Controller: if in controller mode, check A/B/X/Y
+	if(get_app().is_in_controller_mode()) {
+		if(get_app().is_controller_button_pressed(GAMEPAD_BUTTON_RIGHT_FACE_DOWN) ||  // A
+		   get_app().is_controller_button_pressed(GAMEPAD_BUTTON_RIGHT_FACE_RIGHT) || // B
+		   get_app().is_controller_button_pressed(GAMEPAD_BUTTON_RIGHT_FACE_LEFT) ||  // X
+		   get_app().is_controller_button_pressed(GAMEPAD_BUTTON_RIGHT_FACE_UP)) {	  // Y
+			skip = true;
+		}
+	}
 
-	if(total_time_ >= time_to_show) {
+	total_time_ += delta;
+	if(total_time_ >= time_to_show || skip) {
 		get_app().post_event(finished{});
 	}
 
