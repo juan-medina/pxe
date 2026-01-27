@@ -139,6 +139,18 @@ public:
 		return comp;
 	}
 
+	template<typename T>
+		requires std::is_base_of_v<component, T>
+	[[nodiscard]] auto get_components_of_type() const -> std::vector<std::shared_ptr<T>> {
+		std::vector<std::shared_ptr<T>> comps;
+		for(const auto &child: children_) {
+			if(auto comp = std::dynamic_pointer_cast<T>(child.comp)) {
+				comps.push_back(comp);
+			}
+		}
+		return comps;
+	}
+
 	[[nodiscard]] virtual auto pause() -> result<>;
 
 	[[nodiscard]] virtual auto resume() -> result<>;
