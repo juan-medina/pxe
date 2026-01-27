@@ -10,6 +10,7 @@
 #include <pxe/result.hpp>
 #include <pxe/scenes/scene.hpp>
 #include <pxe/settings.hpp>
+#include <pxe/types.hpp>
 
 #include <raylib.h>
 
@@ -20,14 +21,9 @@
 #include <memory>
 #include <spdlog/spdlog.h>
 #include <string>
-#include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <vector>
-
-#if defined(__GNUG__) && !defined(__EMSCRIPTEN__) && !defined(__APPLE__)
-#	include <cxxabi.h>
-#endif
 
 namespace pxe {
 
@@ -233,12 +229,12 @@ protected:
 		requires std::is_base_of_v<scene, T>
 	auto register_scene(int layer = 0, const bool visible = true) -> scene_id {
 		auto id = ++last_scene_id_;
-		const auto name = get_scene_type_name<T>();
+		const auto type_name = get_type_name<T>();
 
-		SPDLOG_DEBUG("registering scene of type `{}` with id {} at layer {}", name, id, layer);
+		SPDLOG_DEBUG("registering scene of type `{}` with id {} at layer {}", type_name, id, layer);
 
 		const auto scene_info_ptr = std::make_shared<scene_info>(
-			scene_info{.id = id, .name = name, .scene_ptr = std::make_unique<T>(), .layer = layer});
+			scene_info{.id = id, .type_name = type_name, .scene_ptr = std::make_unique<T>(), .layer = layer});
 		scenes_.push_back(scene_info_ptr);
 
 		scene_info_ptr->scene_ptr->set_visible(visible);
@@ -312,7 +308,7 @@ private:
 	// =============================================================================
 	struct scene_info {
 		scene_id id;
-		std::string name;
+		std::string type_name;
 		std::unique_ptr<scene> scene_ptr{nullptr};
 		int layer{};
 	};
@@ -380,19 +376,6 @@ private:
 	[[nodiscard]] auto on_show_about() -> result<>;
 	[[nodiscard]] auto on_about_back_clicked() -> result<>;
 	[[nodiscard]] auto on_banner_finished() -> result<>;
-
-	template<typename T>
-	static auto get_scene_type_name() -> std::string {
-#if defined(__GNUG__) && !defined(__EMSCRIPTEN__) && !defined(__APPLE__)
-		int status = 0;
-		const char *mangled = typeid(T).name();
-		using demangle_ptr = std::unique_ptr<char, decltype(&std::free)>;
-		demangle_ptr const demangled{abi::__cxa_demangle(mangled, nullptr, nullptr, &status), &std::free};
-		return (status == 0 && demangled) ? demangled.get() : mangled;
-#else
-		return typeid(T).name();
-#endif
-	}
 
 	// =============================================================================
 	// Audio System

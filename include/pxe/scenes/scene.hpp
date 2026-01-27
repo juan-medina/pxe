@@ -5,6 +5,7 @@
 
 #include <pxe/components/component.hpp>
 #include <pxe/result.hpp>
+#include <pxe/types.hpp>
 
 #include <algorithm>
 #include <cstddef>
@@ -97,12 +98,13 @@ public:
 		requires std::is_base_of_v<component, T>
 	[[nodiscard]] auto register_component(Args &&...args) -> result<size_t> {
 		auto comp = std::make_shared<T>();
+		const auto type_name = get_type_name<T>();
 		if(const auto err = comp->init(get_app(), std::forward<Args>(args)...).unwrap(); err) {
-			return error(std::format("error initializing component of type: {}", typeid(T).name()), *err);
+			return error(std::format("error initializing component of type: {}", type_name), *err);
 		}
 		auto id = comp->get_id(); // save id before moving
 		children_.emplace_back(child{.comp = std::move(comp), .layer = 0});
-		SPDLOG_DEBUG("component of type `{}` registered with id {}", typeid(T).name(), id);
+		SPDLOG_DEBUG("component of type `{}` registered with id {}", type_name, id);
 		return id;
 	}
 
@@ -128,7 +130,8 @@ public:
 		}
 		auto comp = std::dynamic_pointer_cast<T>(it->comp);
 		if(!comp) {
-			return error(std::format("component with id: {} is not of type: {}", id, typeid(T).name()));
+			const auto type_name = get_type_name<T>();
+			return error(std::format("component with id: {} is not of type: {}", id, type_name));
 		}
 		return comp;
 	}

@@ -278,7 +278,7 @@ auto app::unregister_scene(const scene_id id) -> result<> {
 	if(it != scenes_.end()) {
 		if((*it)->scene_ptr) {
 			if(const auto err = (*it)->scene_ptr->end().unwrap(); err) {
-				return error(std::format("error ending scene with id: {} name: {}", id, (*it)->name), *err);
+				return error(std::format("error ending scene with id: {} name: {}", id, (*it)->type_name), *err);
 			}
 			(*it)->scene_ptr.reset(nullptr);
 		}
@@ -298,14 +298,14 @@ auto app::show_scene(const scene_id id, const bool show) -> result<> {
 
 	if(show) {
 		if(const auto enable_err = info->scene_ptr->show().unwrap(); enable_err) {
-			return error(std::format("failed to show scene with id: {} name: {}", id, info->name), *enable_err);
+			return error(std::format("failed to show scene with id: {} name: {}", id, info->type_name), *enable_err);
 		}
-		SPDLOG_DEBUG("show scene with id: {} name: {}", id, info->name);
+		SPDLOG_DEBUG("show scene with id: {} name: {}", id, info->type_name);
 	} else {
 		if(const auto disable_err = info->scene_ptr->hide().unwrap(); disable_err) {
-			return error(std::format("failed to hide scene with id: {} name: {}", id, info->name), *disable_err);
+			return error(std::format("failed to hide scene with id: {} name: {}", id, info->type_name), *disable_err);
 		}
-		SPDLOG_DEBUG("hide scene with id: {} name: {}", id, info->name);
+		SPDLOG_DEBUG("hide scene with id: {} name: {}", id, info->type_name);
 	}
 
 	return true;
@@ -318,9 +318,9 @@ auto app::pause_scene(const scene_id id) -> result<> {
 	}
 
 	if(const auto pause_err = info->scene_ptr->pause().unwrap(); pause_err) {
-		return error(std::format("failed to pause scene with id: {} name: {}", id, info->name), *pause_err);
+		return error(std::format("failed to pause scene with id: {} name: {}", id, info->type_name), *pause_err);
 	}
-	SPDLOG_DEBUG("paused scene with id: {} name: {}", id, info->name);
+	SPDLOG_DEBUG("paused scene with id: {} name: {}", id, info->type_name);
 
 	return true;
 }
@@ -332,9 +332,9 @@ auto app::resume_scene(const scene_id id) -> result<> {
 	}
 
 	if(const auto resume_err = info->scene_ptr->resume().unwrap(); resume_err) {
-		return error(std::format("failed to resume scene with id: {} name: {}", id, info->name), *resume_err);
+		return error(std::format("failed to resume scene with id: {} name: {}", id, info->type_name), *resume_err);
 	}
-	SPDLOG_DEBUG("resumed scene with id: {} name: {}", id, info->name);
+	SPDLOG_DEBUG("resumed scene with id: {} name: {}", id, info->type_name);
 
 	return true;
 }
@@ -351,12 +351,12 @@ auto app::reload_scene(const scene_id id) -> result<> {
 	}
 
 	if(const auto reset_err = info->scene_ptr->reset().unwrap(); reset_err) { // NOLINT(*-ambiguous-smartptr-reset-call)
-		return error(std::format("failed to reset scene with id: {} name: {}", id, info->name), *reset_err);
+		return error(std::format("failed to reset scene with id: {} name: {}", id, info->type_name), *reset_err);
 	}
-	SPDLOG_DEBUG("reset scene with id: {} name: {}", id, info->name);
+	SPDLOG_DEBUG("reset scene with id: {} name: {}", id, info->type_name);
 
 	if(const auto layout_err = info->scene_ptr->layout(drawing_resolution_).unwrap(); layout_err) {
-		return error(std::format("failed to layout scene with id: {} name: {}", id, info->name), *layout_err);
+		return error(std::format("failed to layout scene with id: {} name: {}", id, info->type_name), *layout_err);
 	}
 
 	return true;
@@ -370,9 +370,10 @@ auto app::init_all_scenes() -> result<> {
 	SPDLOG_INFO("init scenes");
 	for(auto &info: scenes_) {
 		if(const auto err = info->scene_ptr->init(*this).unwrap(); err) {
-			return error(std::format("failed to initialize scene with id: {} name: {}", info->id, info->name), *err);
+			return error(std::format("failed to initialize scene with id: {} name: {}", info->id, info->type_name),
+						 *err);
 		}
-		SPDLOG_DEBUG("initialized scene with id: {} name: {}", info->id, info->name);
+		SPDLOG_DEBUG("initialized scene with id: {} name: {}", info->id, info->type_name);
 	}
 	return true;
 }
@@ -382,9 +383,9 @@ auto app::end_all_scenes() -> result<> {
 	for(auto &info: scenes_) {
 		if(info->scene_ptr) {
 			if(const auto err = info->scene_ptr->end().unwrap(); err) {
-				return error(std::format("error ending scene with id: {} name: {}", info->id, info->name), *err);
+				return error(std::format("error ending scene with id: {} name: {}", info->id, info->type_name), *err);
 			}
-			SPDLOG_DEBUG("end scene with id: {} name: {}", info->id, info->name);
+			SPDLOG_DEBUG("end scene with id: {} name: {}", info->id, info->type_name);
 			info->scene_ptr.reset(); // NOLINT(*-ambiguous-smartptr-reset-call)
 		}
 	}
@@ -398,7 +399,7 @@ auto app::update_all_scenes(const float delta) const -> result<> {
 			continue;
 		}
 		if(const auto err = info->scene_ptr->update(delta).unwrap(); err) {
-			return error(std::format("failed to update scene with id: {} name: {}", info->id, info->name), *err);
+			return error(std::format("failed to update scene with id: {} name: {}", info->id, info->type_name), *err);
 		}
 	}
 	return true;
@@ -410,7 +411,7 @@ auto app::draw_all_scenes() const -> result<> {
 			continue;
 		}
 		if(const auto err = info->scene_ptr->draw().unwrap(); err) {
-			return error(std::format("failed to draw scene with id: {} name:", info->id, info->name), *err);
+			return error(std::format("failed to draw scene with id: {} name:", info->id, info->type_name), *err);
 		}
 	}
 	return true;
@@ -419,8 +420,9 @@ auto app::draw_all_scenes() const -> result<> {
 auto app::layout_all_scenes() const -> result<> {
 	for(const auto &scene_info: scenes_) {
 		if(const auto err = scene_info->scene_ptr->layout(drawing_resolution_).unwrap(); err) {
-			return error(std::format("failed to layout scene with id: {} name: {}", scene_info->id, scene_info->name),
-						 *err);
+			return error(
+				std::format("failed to layout scene with id: {} name: {}", scene_info->id, scene_info->type_name),
+				*err);
 		}
 	}
 	return true;
@@ -448,7 +450,7 @@ auto app::subscribe_to_builtin_events() -> void {
 	back_to_menu_ = bind_event<back_to_menu_from>(this, &app::on_back_to_menu_from);
 	show_about_ = on_event<menu::show_about>(this, &app::on_show_about);
 	about_back_clicked_ = on_event<about::back_clicked>(this, &app::on_about_back_clicked);
-	banner_finished_ = on_event <banner::finished>(this, &app::on_banner_finished);
+	banner_finished_ = on_event<banner::finished>(this, &app::on_banner_finished);
 }
 
 auto app::unsubscribe_from_builtin_events() -> void {
