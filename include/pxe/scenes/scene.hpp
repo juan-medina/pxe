@@ -14,6 +14,7 @@
 #include <memory>
 #include <optional>
 #include <spdlog/spdlog.h>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -67,6 +68,7 @@ public:
 	struct child {
 		std::shared_ptr<component> comp;
 		int layer = 0;
+		std::string type_name;
 	};
 	[[nodiscard]] auto init(app &app) -> result<> override {
 		return component::init(app);
@@ -103,7 +105,7 @@ public:
 			return error(std::format("error initializing component of type: {}", type_name), *err);
 		}
 		auto id = comp->get_id(); // save id before moving
-		children_.emplace_back(child{.comp = std::move(comp), .layer = 0});
+		children_.emplace_back(child{.comp = std::move(comp), .layer = 0, .type_name = type_name});
 		SPDLOG_DEBUG("component of type `{}` registered with id {}", type_name, id);
 		return id;
 	}
@@ -116,8 +118,9 @@ public:
 		if(const auto err = it->comp->end().unwrap(); err) {
 			return error(std::format("error ending component with id: {}", id), *err);
 		}
+		const auto type_name = it->type_name;
 		children_.erase(it);
-		SPDLOG_DEBUG("component with id {} removed", id);
+		SPDLOG_DEBUG("component with id: {} name: {} removed", id, type_name);
 		return true;
 	}
 
@@ -128,10 +131,10 @@ public:
 		if(it == children_.end()) {
 			return error(std::format("no component found with id: {}", id));
 		}
+		const auto type_name = get_type_name<T>();
 		auto comp = std::dynamic_pointer_cast<T>(it->comp);
 		if(!comp) {
-			const auto type_name = get_type_name<T>();
-			return error(std::format("component with id: {} is not of type: {}", id, type_name));
+			return error(std::format("component with id: {} is not of type: {}, is: {}", id, type_name, it->type_name));
 		}
 		return comp;
 	}

@@ -9,17 +9,17 @@
 namespace pxe {
 
 auto scene::end() -> result<> {
-	for(auto &[comp, layer]: children_) {
+	for(auto &[comp, layer, type_name]: children_) {
 		if(const auto err = comp->end().unwrap(); err) {
-			return error(std::format("error ending component with id: {}", comp->get_id()), *err);
+			return error(std::format("error ending component with id: {} name: {}", comp->get_id(), type_name), *err);
 		}
 	}
 	return component::end();
 }
 auto scene::update(const float delta) -> result<> {
-	for(auto &[comp, layer]: children_) {
+	for(auto &[comp, layer, type_name]: children_) {
 		if(const auto err = comp->update(delta).unwrap(); err) {
-			return error(std::format("error updating component with id: {}", comp->get_id()), *err);
+			return error(std::format("error updating component with id: {} name: {}", comp->get_id(), type_name), *err);
 		}
 	}
 	return component::update(delta);
@@ -27,9 +27,9 @@ auto scene::update(const float delta) -> result<> {
 
 auto scene::draw() -> result<> {
 	std::ranges::sort(children_, [](const child &a, const child &b) -> bool { return a.layer < b.layer; });
-	for(auto &[comp, layer]: children_) {
+	for(auto &[comp, layer, type_name]: children_) {
 		if(const auto err = comp->draw().unwrap(); err) {
-			return error(std::format("error drawing component with id: {}", comp->get_id()), *err);
+			return error(std::format("error drawing component with id: {} name: {}", comp->get_id(), type_name), *err);
 		}
 	}
 	return component::draw();
@@ -37,7 +37,7 @@ auto scene::draw() -> result<> {
 auto scene::pause() -> result<> {
 	set_enabled(false);
 	paused_components_.clear();
-	for(auto &[comp, layer]: children_) {
+	for(auto &[comp, layer, type_name]: children_) {
 		const auto id = comp->get_id();
 		const auto was_enabled = comp->is_enabled();
 		auto pause_result = paused_component{.id = id, .enabled = was_enabled};
