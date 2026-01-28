@@ -548,7 +548,7 @@ auto app::set_default_font(const std::string &path, const int size, const int te
 	}
 
 	auto font_size = size;
-	const auto font = LoadFontEx(path.c_str(), font_size, nullptr, 0);
+	const auto font = LoadFont(path.c_str());
 	if(font_size == 0) {
 		font_size = font.baseSize;
 	}
