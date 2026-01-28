@@ -437,7 +437,7 @@ auto app::register_builtin_scenes() -> void {
 	menu_scene_ = register_scene<menu>(false);
 	about_scene_ = register_scene<about>(false);
 	banner_scene_ = register_scene<banner>();
-	register_scene<game_overlay>(999);
+	game_overlay_scene_ = register_scene<game_overlay>(999, false);
 	options_scene_ = register_scene<options>(1000, false);
 }
 
@@ -1615,6 +1615,11 @@ auto app::handle_wait_stage(const bool is_reset) -> void {
 			SPDLOG_ERROR("failed to show scene {} during transition", transition_.to_scene);
 		}
 		SPDLOG_DEBUG("transition: wait complete, entering fade in stage");
+		if(transition_.to_scene == license_scene_) {
+			if(const auto err = show_scene(game_overlay_scene_).unwrap(); err) {
+				SPDLOG_ERROR("can not show game overlay scene after license scene");
+			}
+		}
 	}
 
 	transition_.stage = transition_stage::fade_in;

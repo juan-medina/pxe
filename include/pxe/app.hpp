@@ -330,6 +330,7 @@ private:
 	scene_id menu_scene_{0};
 	scene_id about_scene_{0};
 	scene_id options_scene_{0};
+	scene_id game_overlay_scene_{0};
 	scene_id banner_scene_{0};
 
 	static constexpr float fade_out_duration = 0.3F;
