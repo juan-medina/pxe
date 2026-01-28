@@ -7,6 +7,8 @@
 #include <pxe/components/ui_component.hpp>
 #include <pxe/result.hpp>
 
+#include <raylib.h>
+
 #include <string>
 
 namespace pxe {
@@ -43,12 +45,16 @@ public:
 		centered_ = centered;
 	}
 
+	auto set_text_color(const Color &color) -> void {
+		text_color_ = color;
+	}
+
 private:
 	std::string text_{"label"};
+	bool centered_{false};
+	Color text_color_{WHITE};
 
 	auto calculate_size() -> void;
-
-	bool centered_{false};
 };
 
 } // namespace pxe

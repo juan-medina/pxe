@@ -42,6 +42,11 @@ auto label::draw() -> result<> {
 	if(!is_visible()) {
 		return true;
 	}
+	if(is_enabled()) {
+		GuiEnable();
+	} else {
+		GuiDisable();
+	}
 
 	auto [x, y] = get_position();
 	const auto [width, height] = get_size();
@@ -50,7 +55,7 @@ auto label::draw() -> result<> {
 	const auto default_text_color = GuiGetStyle(DEFAULT, TEXT_COLOR_NORMAL);
 
 	GuiSetStyle(DEFAULT, TEXT_SIZE, static_cast<int>(get_font_size()));
-	GuiSetStyle(DEFAULT, TEXT_COLOR_NORMAL, ColorToInt(WHITE));
+	GuiSetStyle(DEFAULT, TEXT_COLOR_NORMAL, ColorToInt(text_color_));
 
 	if(centered_) {
 		x -= width / 2;
