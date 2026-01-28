@@ -12,7 +12,10 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <iomanip>
+#include <ios>
 #include <raygui.h>
+#include <sstream>
 #include <string>
 
 namespace pxe {
@@ -56,7 +59,9 @@ auto audio_slider::draw() -> result<> {
 
 	GuiLabel({.x = x, .y = y, .width = static_cast<float>(label_width_), .height = line_height_}, label_.c_str());
 
-	const auto value_str = std::to_string(static_cast<int>(internal_current_)) + " %";
+	std::stringstream ss;
+	ss << std::setw(3) << std::right << static_cast<int>(internal_current_);
+	const auto value_str = ss.str() + " %";
 
 	x += static_cast<float>(label_width_);
 

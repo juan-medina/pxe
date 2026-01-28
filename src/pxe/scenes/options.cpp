@@ -108,7 +108,7 @@ auto options::init(app &app) -> result<> {
 		return error("failed to get back button component", *err);
 	}
 	back_button_ptr->set_text(GuiIconText(ICON_PLAYER_PREVIOUS, "Back"));
-	back_button_ptr->set_size({.width = 55, .height = 20});
+	back_button_ptr->set_size({.width = 65, .height = 25});
 	back_button_ptr->set_controller_button(GAMEPAD_BUTTON_MIDDLE_RIGHT);
 
 #ifndef __EMSCRIPTEN__
@@ -122,7 +122,7 @@ auto options::init(app &app) -> result<> {
 	}
 
 	quit_button_ptr->set_text(GuiIconText(ICON_EXIT, "Quit"));
-	quit_button_ptr->set_size({.width = 55, .height = 20});
+	quit_button_ptr->set_size({.width = 65, .height = 25});
 	quit_button_ptr->set_controller_button(GAMEPAD_BUTTON_RIGHT_FACE_UP);
 #endif
 
@@ -181,7 +181,7 @@ auto options::layout(const size screen_size) -> result<> {
 	const auto [slider_width, slider_height] = music_slider_component->get_size();
 
 	float control_x = (screen_width_ / 2) - (slider_width / 2);
-	float control_y = window_y + (slider_height * 4);
+	float control_y = window_y + (slider_height * 2);
 
 	// center slider in the window
 	music_slider_component->set_position({.x = control_x, .y = control_y});
