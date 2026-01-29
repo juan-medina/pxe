@@ -38,7 +38,7 @@ auto ui_component::update(const float delta) -> result<> {
 }
 
 auto ui_component::play_click_sfx() -> result<> {
-	return get_app().play_sfx(click_sfx_);
+	return get_app().play_click();
 }
 
 } // namespace pxe

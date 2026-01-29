@@ -40,8 +40,7 @@ public:
 
 private:
 	static constexpr auto sprite_sheet_name = "menu";
-	static constexpr auto sprite_sheet_path = "resources/sprites/menu.json";
-	static constexpr auto logo_sprite = "logo.png";
+	static constexpr auto sprite_sheet_path = "resources/pxe/sprites/menu.json";
 
 	size_t title_{0};
 	static constexpr auto large_font_size = 20;

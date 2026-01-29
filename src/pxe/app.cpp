@@ -95,13 +95,14 @@ auto app::init() -> result<> {
 	return true;
 }
 
-auto app::init_scenes() -> result<> {
-	return init_all_scenes();
-}
-
 auto app::end() -> result<> {
 	if(const auto err = persist_settings().unwrap(); err) {
 		return error("failed to save settings on end application", *err);
+	}
+
+	// unload sfx
+	if(const auto err = unload_sfx(click_sfx).unwrap(); err) {
+		return pxe::error{"failed to unload click sfx", *err};
 	}
 
 	unsubscribe_from_builtin_events();
@@ -143,6 +144,14 @@ auto app::end() -> result<> {
 auto app::run() -> result<> {
 	if(const auto err = init().unwrap(); err) {
 		return error("error init the application", *err);
+	}
+
+	if(const auto err = set_default_font(font_path).unwrap(); err) {
+		return error{"failed to set default font", *err};
+	}
+
+	if(const auto err = load_sfx(click_sfx, click_sfx_path).unwrap(); err) {
+		return error{"failed to load button sfx", *err};
 	}
 
 	if(const auto err = init_scenes().unwrap(); err) {
@@ -366,7 +375,7 @@ auto app::reload_scene(const scene_id id) -> result<> {
 // Scene Management - Lifecycle
 // =============================================================================
 
-auto app::init_all_scenes() -> result<> {
+auto app::init_scenes() -> result<> {
 	SPDLOG_INFO("init scenes");
 	for(auto &info: scenes_) {
 		if(const auto err = info->scene_ptr->init(*this).unwrap(); err) {

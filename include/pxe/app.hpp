@@ -121,6 +121,10 @@ public:
 	}
 
 	// Audio Management - SFX
+	[[nodiscard]] auto play_click() -> result<> {
+		return play_sfx(click_sfx);
+	}
+
 	[[nodiscard]] auto play_sfx(const std::string &name, float volume = 1.0F) -> result<>;
 
 	auto set_sfx_volume(const float volume) -> void {
@@ -213,6 +217,19 @@ public:
 	// URL Opening
 	[[nodiscard]] static auto open_url(const std::string &url) -> result<>;
 
+	auto set_logo(const std::string &sheet, const std::string &frame) -> void {
+		logo_sheet_ = sheet;
+		logo_frame_ = frame;
+	}
+
+	[[nodiscard]] auto get_logo_sheet() const -> const std::string & {
+		return logo_sheet_;
+	}
+
+	[[nodiscard]] auto get_logo_frame() const -> const std::string & {
+		return logo_frame_;
+	}
+
 protected:
 	[[nodiscard]] virtual auto init() -> result<>;
 	[[nodiscard]] virtual auto init_scenes() -> result<>;
@@ -275,12 +292,20 @@ protected:
 
 private:
 	// =============================================================================
+	// Resource Paths
+	static constexpr auto font_path = "resources/pxe/fonts/PeaberryMono.fnt";
+	static constexpr auto click_sfx_path = "resources/pxe/sfx/click.wav";
+	static constexpr auto click_sfx = "click";
+
+	// =============================================================================
 	// Application Identity
 	// =============================================================================
 	std::string name_;
 	std::string team_;
 	std::string title_{"Engine App"};
 	std::string banner_{"Engine Application v{}"};
+	std::string logo_sheet_;
+	std::string logo_frame_;
 	version version_{};
 	static constexpr auto version_file_path = "resources/version/version.json";
 
@@ -350,7 +375,6 @@ private:
 
 	[[nodiscard]] auto find_scene_info(scene_id id) -> result<std::shared_ptr<scene_info>>;
 	auto sort_scenes() -> void;
-	[[nodiscard]] auto init_all_scenes() -> result<>;
 	[[nodiscard]] auto end_all_scenes() -> result<>;
 	[[nodiscard]] auto update_all_scenes(float delta) const -> result<>;
 	[[nodiscard]] auto draw_all_scenes() const -> result<>;

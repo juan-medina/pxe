@@ -8,8 +8,6 @@
 
 #include <raylib.h>
 
-#include <string>
-
 namespace pxe {
 class app;
 
@@ -45,10 +43,6 @@ public:
 		return font_size_;
 	}
 
-	auto set_click_sfx(const std::string &sound_name) -> void {
-		click_sfx_ = sound_name;
-	}
-
 	[[nodiscard]] auto play_click_sfx() -> result<>;
 
 	auto set_focussed(const bool focussed) -> void {
@@ -63,7 +57,6 @@ private:
 	bool focussed_ = false;
 	Font font_{};
 	float font_size_ = 20.0F;
-	std::string click_sfx_{"click"};
 };
 
 } // namespace pxe

@@ -74,7 +74,14 @@ auto menu::init(app &app) -> result<> {
 		return error("failed to initialize sprite sheet", *err);
 	}
 
-	if(const auto err = register_component<sprite>(sprite_sheet_name, logo_sprite).unwrap(title_); err) {
+	const auto logo_sheet = get_app().get_logo_sheet();
+	const auto logo_frame = get_app().get_logo_frame();
+
+	if(logo_sheet.empty() || logo_frame.empty()) {
+		return error("logo sheet or frame is empty");
+	}
+
+	if(const auto err = register_component<sprite>(logo_sheet, logo_frame).unwrap(title_); err) {
 		return error("failed to register title label", *err);
 	}
 
