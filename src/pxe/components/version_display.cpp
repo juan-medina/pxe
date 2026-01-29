@@ -110,8 +110,8 @@ auto version_display::draw_parts(const Vector2 pos, const bool shadow) -> void {
 
 void version_display::set_font_size(const float &size) {
 	ui_component::set_font_size(size);
-	parts_spacing_ = size / 10.0F;
-	shadow_offset_ = size / 10.0F * 2.0F;
+	parts_spacing_ = size / 30.0F;
+	shadow_offset_ = size / 15.0F * 2.0F;
 }
 
 } // namespace pxe
