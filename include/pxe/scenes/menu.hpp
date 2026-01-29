@@ -51,8 +51,8 @@ private:
 	size_t about_button_{0};
 #ifndef __EMSCRIPTEN__
 	size_t quit_button_{0};
-	static constexpr auto play_button_size = 115;
-	static constexpr auto other_buttons_size = 55;
+	static constexpr auto play_button_size = 165;
+	static constexpr auto other_buttons_size = 80;
 #else
 	static constexpr auto play_button_size = 80;
 	static constexpr auto other_buttons_size = 80;
