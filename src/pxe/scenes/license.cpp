@@ -62,7 +62,7 @@ auto license::init(app &app) -> result<> {
 	}
 	button_ptr->set_text(GuiIconText(ICON_OK_TICK, "Accept"));
 	button_ptr->set_position({.x = 0, .y = 0});
-	button_ptr->set_size({.width = 60, .height = 30});
+	button_ptr->set_size({.width = 90, .height = 30});
 	button_ptr->set_controller_button(GAMEPAD_BUTTON_RIGHT_FACE_DOWN);
 
 	button_click_ = app.bind_event<button::click>(this, &license::on_button_click);
@@ -81,7 +81,7 @@ auto license::layout(const size screen_size) -> result<> {
 		return error("failed to get scroll text component", *err);
 	}
 
-	const auto min_width = screen_size.width * 2.5F / 3.0F;
+	const auto min_width = screen_size.width * 2.8F / 3.0F;
 	scroll_text_ptr->set_size({.width = std::min(min_width, 1200.0F), .height = screen_size.height * 3.5F / 5.0F});
 
 	scroll_text_ptr->set_position({.x = (screen_size.width - scroll_text_ptr->get_size().width) / 2.0F,
