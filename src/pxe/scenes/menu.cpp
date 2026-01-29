@@ -34,7 +34,7 @@ auto menu::init(app &app) -> result<> {
 
 	play_button->set_text(GuiIconText(ICON_PLAYER_PLAY, "Play"));
 	play_button->set_position({.x = 0, .y = 0});
-	play_button->set_size({.width = play_button_size, .height = 35});
+	play_button->set_size({.width = play_button_size, .height = 45});
 	play_button->set_font_size(large_font_size);
 	play_button->set_controller_button(GAMEPAD_BUTTON_RIGHT_FACE_DOWN);
 
