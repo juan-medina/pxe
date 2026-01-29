@@ -111,33 +111,45 @@ function(pxe_add_game TARGET_NAME)
 
     target_link_libraries(${TARGET_NAME} PRIVATE pxe)
 
+    # Always merge resources (game root, engine under pxe/)
+    set(MERGED_RESOURCES_DIR ${CMAKE_BINARY_DIR}/merged_resources)
+    file(TO_CMAKE_PATH "${MERGED_RESOURCES_DIR}" MERGED_RESOURCES_DIR_CMAKE)
+    add_custom_command(
+        OUTPUT ${MERGED_RESOURCES_DIR}/.merged
+        COMMAND ${CMAKE_COMMAND} -E rm -rf ${MERGED_RESOURCES_DIR}
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${MERGED_RESOURCES_DIR}
+        COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different ${CMAKE_SOURCE_DIR}/resources ${MERGED_RESOURCES_DIR}
+        COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different ${CMAKE_SOURCE_DIR}/external/pxe/resources ${MERGED_RESOURCES_DIR}/pxe
+        COMMAND ${CMAKE_COMMAND} -E touch ${MERGED_RESOURCES_DIR}/.merged
+        DEPENDS ${CMAKE_SOURCE_DIR}/resources ${CMAKE_SOURCE_DIR}/external/pxe/resources
+        COMMENT "Merging game resources (root) and engine resources (under pxe/)"
+        VERBATIM
+    )
+    add_custom_target(merge_resources_all DEPENDS ${MERGED_RESOURCES_DIR}/.merged)
+    add_dependencies(${TARGET_NAME} merge_resources_all)
+
     if (EMSCRIPTEN)
         set(CMAKE_EXECUTABLE_SUFFIX ".html" PARENT_SCOPE)
-
         set(CUSTOM_SHELL ${CMAKE_SOURCE_DIR}/src/web/template.html)
-
         target_link_options(${TARGET_NAME} PRIVATE
                 "--shell-file=${CUSTOM_SHELL}"
-                "--preload-file=${CMAKE_SOURCE_DIR}/resources@resources"
+                "--preload-file=${MERGED_RESOURCES_DIR_CMAKE}@resources"
                 "-sUSE_GLFW=3"
                 "-sALLOW_MEMORY_GROWTH=1"
                 "--bind"
                 "-sEXPORTED_RUNTIME_METHODS=['HEAPF32','HEAP32','HEAPU8','requestFullscreen']"
         )
-
         set_target_properties(${TARGET_NAME} PROPERTIES OUTPUT_NAME "index")
         configure_file(${CMAKE_SOURCE_DIR}/src/res/icon.ico favicon.ico COPYONLY)
-    endif ()
-
-    if (NOT EMSCRIPTEN)
+    else ()
         add_custom_command(
-                TARGET ${TARGET_NAME} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E echo "Syncing resources if needed..."
-                COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
-                ${CMAKE_SOURCE_DIR}/resources
+            TARGET ${TARGET_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E echo "Copying merged resources to output directory..."
+            COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
+                ${MERGED_RESOURCES_DIR}
                 $<TARGET_FILE_DIR:${TARGET_NAME}>/resources
-                COMMENT "Copying resources only if changed"
-                VERBATIM
+            COMMENT "Copying merged resources (game root, engine under pxe/) to output resources directory"
+            VERBATIM
         )
     endif ()
 

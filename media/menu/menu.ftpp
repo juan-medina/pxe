@@ -1,0 +1,81 @@
+{
+  "meta": {
+    "version": "0.6.7"
+  },
+  "savePath": "",
+  "images": [
+    {
+      "name": "button_05.png",
+      "path": "C:/Users/mail/Documents/Source/energy-swap/media/menu/button_05.png",
+      "folder": ""
+    },
+    {
+      "name": "button_06.png",
+      "path": "C:/Users/mail/Documents/Source/energy-swap/media/menu/button_06.png",
+      "folder": ""
+    },
+    {
+      "name": "button_07.png",
+      "path": "C:/Users/mail/Documents/Source/energy-swap/media/menu/button_07.png",
+      "folder": ""
+    },
+    {
+      "name": "button_08.png",
+      "path": "C:/Users/mail/Documents/Source/energy-swap/media/menu/button_08.png",
+      "folder": ""
+    },
+    {
+      "name": "button_09.png",
+      "path": "C:/Users/mail/Documents/Source/energy-swap/media/menu/button_09.png",
+      "folder": ""
+    },
+    {
+      "name": "button_11.png",
+      "path": "C:/Users/mail/Documents/Source/energy-swap/media/menu/button_11.png",
+      "folder": ""
+    },
+    {
+      "name": "button_15.png",
+      "path": "C:/Users/mail/Documents/Source/energy-swap/media/menu/button_15.png",
+      "folder": ""
+    },
+    {
+      "name": "gear.png",
+      "path": "C:/Users/mail/Documents/Source/energy-swap/media/menu/gear.png",
+      "folder": ""
+    },
+    {
+      "name": "pxe.png",
+      "path": "C:/Users/mail/Documents/Source/energy-swap/media/menu/pxe.png",
+      "folder": ""
+    }
+  ],
+  "folders": [],
+  "packOptions": {
+    "textureName": "menu",
+    "textureFormat": "png",
+    "removeFileExtension": false,
+    "prependFolderName": true,
+    "base64Export": false,
+    "tinify": false,
+    "tinifyKey": "",
+    "scale": 1,
+    "filter": "none",
+    "exporter": "JSON (hash)",
+    "fileName": "pack-result",
+    "savePath": "",
+    "width": 1024,
+    "height": 1024,
+    "fixedSize": false,
+    "powerOfTwo": true,
+    "padding": 2,
+    "extrude": 2,
+    "allowRotation": true,
+    "allowTrim": true,
+    "trimMode": "trim",
+    "alphaThreshold": "0",
+    "detectIdentical": true,
+    "packer": "OptimalPacker",
+    "packerMethod": "Automatic"
+  }
+}

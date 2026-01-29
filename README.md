@@ -25,6 +25,11 @@ An opinionated 2D game engine built in C++20 using raylib.
 - [PlatformFolders](https://github.com/sago007/PlatformFolders) (licensed under MIT)
 - CRT Shader based on [Godot CRT Shader](https://perons.itch.io/godot-crt-shader) by perons.
 
+**Graphics**
+
+- UI graphics by [Kenney.nl](https://kenney.nl/assets) (licensed under Public Domain CC-0).
+- [Peaberry Pixel Font by emhuo](https://emhuo.itch.io/peaberry-pixel-font) (licensed under Open Font License Version 1.1).
+
 **License**
 
 - This project is licensed under the MIT License — see `LICENSE` for details.
